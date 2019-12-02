@@ -137,16 +137,7 @@ void init_vulkan(vk::Instance& instance) {
     }
 }
 
-bool check_physical_device(vk::PhysicalDevice& device) {
-    vk::PhysicalDeviceProperties2 properties = device.getProperties2();
-
-    std::cout << "Checking device: " << properties.properties.deviceName << std::endl;
-
-    if (properties.properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu) {
-        std::cout << "    Not a discrete gpu" << std::endl;
-        return false;
-    }
-
+bool check_device_extensions(vk::PhysicalDevice& device) {
     std::size_t desiredExtensionCount = sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(const char*);
     // A bitmask initialized to false, to check off extensions as we find them
     std::vector<bool> foundExtensions(desiredExtensionCount, false);
@@ -177,13 +168,45 @@ bool check_physical_device(vk::PhysicalDevice& device) {
     return allFound;
 }
 
+bool check_device_queue_families(vk::PhysicalDevice& device) {
+    std::cout << "    Queue Families:" << std::endl;
+    std::vector<vk::QueueFamilyProperties2> queueFamilies = device.getQueueFamilyProperties2();
+    bool graphicsFound = false;
+    for (auto& queueFamily : queueFamilies) {
+        std::cout << "        " << to_string(queueFamily.queueFamilyProperties.queueFlags);
+        std::cout << " " << queueFamily.queueFamilyProperties.queueCount;
+
+        if (queueFamily.queueFamilyProperties.queueFlags & vk::QueueFlagBits::eGraphics) {
+           graphicsFound = true;
+        }
+
+        std::cout << std::endl;
+    }
+
+    return graphicsFound;
+}
+
+bool check_physical_device(vk::PhysicalDevice& device) {
+    vk::PhysicalDeviceProperties2 properties = device.getProperties2();
+
+    std::cout << "Checking device: " << properties.properties.deviceName << std::endl;
+
+    if (properties.properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu) {
+        std::cout << "    Not a discrete gpu" << std::endl;
+        return false;
+    }
+
+    return check_device_extensions(device) && check_device_queue_families(device);
+}
+
 vk::PhysicalDevice find_device(vk::Instance& instance) {
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
-    if (physicalDevices.size() == 0) {
+    if (physicalDevices.empty()) {
         throw std::runtime_error("No physical devices found!");
     }
 
     for (auto device : physicalDevices) {
+        // We just pick the first device that satisfies our requirements
         if (check_physical_device(device)) {
             return device;
         }
