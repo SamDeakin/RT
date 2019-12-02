@@ -7,7 +7,19 @@
 #include <vector>
 
 const char* DESIRED_INSTANCE_EXTENSIONS[] = {
-        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+};
+
+const char* DESIRED_INSTANCE_LAYERS[] = {
+        "VK_LAYER_LUNARG_standard_validation", // This includes a standard set of other layers in an optimal order
+};
+
+const char* DESIRED_DEVICE_EXTENSIONS[] = {
+        VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+        VK_NV_RAY_TRACING_EXTENSION_NAME,
+};
+
+const char* DESIRED_DEVICE_LAYERS[] = {
 };
 
 std::vector<const char*> get_instance_extensions(const char** glfwExtensions, const uint32_t glfwExtensionCount) {
@@ -23,7 +35,7 @@ std::vector<const char*> get_instance_extensions(const char** glfwExtensions, co
     std::vector<bool> foundExtensions(desiredExtensionCount, false);
 
     std::cout << "Supported Instance Extensions:" << std::endl;
-    for (auto extension : extensionProperties) {
+    for (auto& extension : extensionProperties) {
         std::cout << "    ";
 
         for (std::size_t i = 0; i < desiredExtensionCount; i++) {
@@ -49,10 +61,6 @@ std::vector<const char*> get_instance_extensions(const char** glfwExtensions, co
     return extensionNames;
 }
 
-const char* DESIRED_INSTANCE_LAYERS[] = {
-        "VK_LAYER_LUNARG_standard_validation", // This includes a standard set of other layers in an optimal order
-};
-
 std::vector<const char*> get_instance_layers() {
     std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
     std::vector<const char*> layerNames;
@@ -62,7 +70,7 @@ std::vector<const char*> get_instance_layers() {
     std::vector<bool> foundLayers(desiredLayerCount, false);
 
     std::cout << "Supported Instance Layers:" << std::endl;
-    for (auto layer : layerProperties) {
+    for (auto& layer : layerProperties) {
         std::cout << "    ";
 
         for (std::size_t i = 0; i < desiredLayerCount; i++) {
@@ -129,6 +137,60 @@ void init_vulkan(vk::Instance& instance) {
     }
 }
 
+bool check_physical_device(vk::PhysicalDevice& device) {
+    vk::PhysicalDeviceProperties2 properties = device.getProperties2();
+
+    std::cout << "Checking device: " << properties.properties.deviceName << std::endl;
+
+    std::size_t desiredExtensionCount = sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(const char*);
+    // A bitmask initialized to false, to check off extensions as we find them
+    std::vector<bool> foundExtensions(desiredExtensionCount, false);
+
+    std::cout << "    Supported Device Extensions:" << std::endl;
+    std::vector<vk::ExtensionProperties> extensionProperties = device.enumerateDeviceExtensionProperties();
+    for (auto& extension : extensionProperties) {
+        std::cout << "        ";
+        for (std::size_t i = 0; i < desiredExtensionCount; i++) {
+            if (!strcmp(DESIRED_DEVICE_EXTENSIONS[i], extension.extensionName)) {
+                foundExtensions[i] = true;
+                std::cout << "[Enabled] ";
+            }
+        }
+
+        std::cout << extension.extensionName << std::endl;
+    }
+
+    // Make sure all desired extensions were found
+    bool allFound = true;
+    for (std::size_t i = 0; i < desiredExtensionCount; i++) {
+        if (!foundExtensions[i]) {
+            std::cout << "    [Missing] " << DESIRED_DEVICE_EXTENSIONS[i] << std::endl;
+            allFound = false;
+        }
+    }
+
+    return allFound;
+}
+
+vk::PhysicalDevice find_device(vk::Instance& instance) {
+    std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
+    if (physicalDevices.size() == 0) {
+        throw std::runtime_error("No physical devices found!");
+    }
+
+    for (auto device : physicalDevices) {
+        if (check_physical_device(device)) {
+            return device;
+        }
+    }
+
+    throw std::runtime_error("No suitable devices found!");
+}
+
+void init_device(vk::Instance& instance) {
+    vk::PhysicalDevice physicalDevice = find_device(instance);
+}
+
 void cleanup(vk::Instance& instance) {
     instance.destroy();
 }
@@ -136,6 +198,8 @@ void cleanup(vk::Instance& instance) {
 int main() {
     vk::Instance instance;
     init_vulkan(instance);
+
+    init_device(instance);
 
     cleanup(instance);
 }
