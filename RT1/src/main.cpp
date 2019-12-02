@@ -142,6 +142,11 @@ bool check_physical_device(vk::PhysicalDevice& device) {
 
     std::cout << "Checking device: " << properties.properties.deviceName << std::endl;
 
+    if (properties.properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu) {
+        std::cout << "    Not a discrete gpu" << std::endl;
+        return false;
+    }
+
     std::size_t desiredExtensionCount = sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(const char*);
     // A bitmask initialized to false, to check off extensions as we find them
     std::vector<bool> foundExtensions(desiredExtensionCount, false);
