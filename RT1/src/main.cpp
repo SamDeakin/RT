@@ -19,9 +19,6 @@ const char* DESIRED_DEVICE_EXTENSIONS[] = {
         VK_NV_RAY_TRACING_EXTENSION_NAME,
 };
 
-const char* DESIRED_DEVICE_LAYERS[] = {
-};
-
 std::vector<const char*> get_instance_extensions(const char** glfwExtensions, const uint32_t glfwExtensionCount) {
     std::vector<vk::ExtensionProperties> extensionProperties = vk::enumerateInstanceExtensionProperties();
 
