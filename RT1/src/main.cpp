@@ -15,6 +15,7 @@ const char* DESIRED_INSTANCE_LAYERS[] = {
 };
 
 const char* DESIRED_DEVICE_EXTENSIONS[] = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
         VK_NV_RAY_TRACING_EXTENSION_NAME,
 };
@@ -27,7 +28,7 @@ std::vector<const char*> get_instance_extensions(const char** glfwExtensions, co
         extensionNames.push_back(glfwExtensions[i]);
     }
 
-    std::size_t desiredExtensionCount = sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(const char*);
+    std::size_t desiredExtensionCount = sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS));
     // A bitmask initialized to false, to check off extensions as we find them
     std::vector<bool> foundExtensions(desiredExtensionCount, false);
 
@@ -62,7 +63,7 @@ std::vector<const char*> get_instance_layers() {
     std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
     std::vector<const char*> layerNames;
 
-    std::size_t desiredLayerCount = sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(const char*);
+    std::size_t desiredLayerCount = sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS));
     // A bitmask initialized to false, to check off extensions as we find them
     std::vector<bool> foundLayers(desiredLayerCount, false);
 
@@ -92,7 +93,7 @@ std::vector<const char*> get_instance_layers() {
     return layerNames;
 }
 
-void init_vulkan(vk::Instance& instance) {
+vk::Instance init_vulkan() {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize glfw!");
     }
@@ -128,10 +129,13 @@ void init_vulkan(vk::Instance& instance) {
     instanceCreateInfo.ppEnabledLayerNames = layers.data();
 #endif
 
+    vk::Instance instance;
     vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
     if (result != vk::Result::eSuccess) {
         throw std::runtime_error("Failed to create Vulkan instance!");
     }
+
+    return instance;
 }
 
 bool check_device_extensions(vk::PhysicalDevice& device) {
@@ -174,7 +178,7 @@ bool check_device_queue_families(vk::PhysicalDevice& device) {
         std::cout << " " << queueFamily.queueFamilyProperties.queueCount;
 
         if (queueFamily.queueFamilyProperties.queueFlags & vk::QueueFlagBits::eGraphics) {
-           graphicsFound = true;
+            graphicsFound = true;
         }
 
         std::cout << std::endl;
@@ -212,19 +216,59 @@ vk::PhysicalDevice find_device(vk::Instance& instance) {
     throw std::runtime_error("No suitable devices found!");
 }
 
-void init_device(vk::Instance& instance) {
-    vk::PhysicalDevice physicalDevice = find_device(instance);
+std::vector<vk::DeviceQueueCreateInfo> select_queues(vk::PhysicalDevice& device) {
+    std::vector<vk::DeviceQueueCreateInfo> queues;
+    std::vector<vk::QueueFamilyProperties2> queueFamilies = device.getQueueFamilyProperties2();
+
+    uint32_t index = 0;
+    for (auto& family : queueFamilies) {
+        if (family.queueFamilyProperties.queueFlags & vk::QueueFlagBits::eGraphics) {
+            const float priority = 1.0;
+            queues.push_back(vk::DeviceQueueCreateInfo(
+                    vk::DeviceQueueCreateFlags(),
+                    index,
+                    1,
+                    &priority
+            ));
+            return queues;
+        }
+        index++;
+    }
+
+    throw std::runtime_error("Can't find graphics queue to create?");
 }
 
-void cleanup(vk::Instance& instance) {
+vk::PhysicalDeviceFeatures init_device_features(vk::PhysicalDevice& device) {
+    return vk::PhysicalDeviceFeatures();
+}
+
+vk::Device init_device(vk::Instance& instance) {
+    vk::PhysicalDevice physicalDevice = find_device(instance);
+
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos = select_queues(physicalDevice);
+    vk::PhysicalDeviceFeatures features = init_device_features(physicalDevice);
+
+    vk::DeviceCreateInfo deviceCreateInfo(
+            vk::DeviceCreateFlags(),
+            static_cast<uint32_t>(queueCreateInfos.size()),
+            queueCreateInfos.data(),
+            0,
+            nullptr,
+            sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
+            DESIRED_DEVICE_EXTENSIONS,
+            &features);
+
+    return physicalDevice.createDevice(deviceCreateInfo);
+}
+
+void cleanup(vk::Instance& instance, vk::Device& device) {
+    device.destroy();
     instance.destroy();
 }
 
 int main() {
-    vk::Instance instance;
-    init_vulkan(instance);
+    vk::Instance instance = init_vulkan();
+    vk::Device device = init_device(instance);
 
-    init_device(instance);
-
-    cleanup(instance);
+    cleanup(instance, device);
 }
