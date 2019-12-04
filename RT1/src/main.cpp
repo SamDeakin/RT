@@ -41,20 +41,6 @@ check_device_queue_families(vk::PhysicalDevice& device) {
     return graphicsFound;
 }
 
-bool
-check_physical_device(vk::PhysicalDevice& device) {
-    vk::PhysicalDeviceProperties2 properties = device.getProperties2();
-
-    std::cout << "Checking device: " << properties.properties.deviceName << std::endl;
-
-    if (properties.properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu) {
-        std::cout << "    Not a discrete gpu" << std::endl;
-        return false;
-    }
-
-    return check_device_extensions(device) && check_device_queue_families(device);
-}
-
 vk::PhysicalDevice
 find_device(vk::Instance& instance) {
     std::vector<vk::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
@@ -88,11 +74,6 @@ select_queues(vk::PhysicalDevice& device) {
     }
 
     throw std::runtime_error("Can't find graphics queue to create?");
-}
-
-vk::PhysicalDeviceFeatures
-init_device_features(vk::PhysicalDevice& device) {
-    return vk::PhysicalDeviceFeatures();
 }
 
 vk::Device

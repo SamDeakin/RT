@@ -30,15 +30,21 @@ namespace Core {
         ~Renderer() noexcept;
 
     private:
-        vk::Instance m_instance;
-        vk::Device m_device;
 
-        // Tracking enabled features
+        /// Vulkan instance configuration
+        vk::Instance m_instance;
         std::vector<vk::ExtensionProperties> m_instanceExtensions;
         std::vector<vk::LayerProperties> m_instanceLayers;
+
+        /// Vulkan physical device configuration
+        vk::PhysicalDevice m_physicalDevice;
+        vk::PhysicalDeviceProperties m_deviceProperties;
+        vk::PhysicalDeviceFeatures m_features;
         std::vector<vk::ExtensionProperties> m_deviceExtensions;
         std::vector<vk::DeviceQueueInfo2> m_deviceQueues;
-        vk::PhysicalDeviceFeatures m_features;
+
+        /// Vulkan logical device configuration
+        vk::Device m_device;
 
         // -- ctor helper functions --
 
@@ -53,14 +59,18 @@ namespace Core {
         void addInstanceExtensions(uint32_t glfwExtensionCount, const char** glfwExtensions, uint32_t instanceExtensionCount, const char** instanceExtensions);
         void addInstanceLayers(uint32_t instanceLayerCount, const char** instanceLayers);
 
-        /// Initialize m_device
-        void initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features);
-        /// Used by initDevice: these will be called for a candidate device
+        /// Choose a physical device and initialize parameters for the creation of a logical device
+        void initPhysicalDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features);
+        /// Used by initPhysicalDevice: these will be called for a candidate device
         /// They are nodiscard because the device may not be suitable, in which case the function did not complete successfully
         /// They must be retried with a new device or the program should exit.
+        [[nodiscard]] bool addDeviceProperties();
         [[nodiscard]] bool addDeviceFeatures(vk::PhysicalDeviceFeatures features);
         [[nodiscard]] bool addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions);
         [[nodiscard]] bool addDeviceQueues();
+
+        /// Initialize m_device
+        void initLogicalDevice();
 
         // -- end ctor helper functions --
     };

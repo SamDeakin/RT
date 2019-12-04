@@ -18,7 +18,8 @@ namespace Core {
                        const char** deviceExtensions,
                        vk::PhysicalDeviceFeatures features) {
         initInstance(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions, instanceLayerCount, instanceLayers);
-        initDevice(deviceExtensionCount, deviceExtensions, features);
+        initPhysicalDevice(deviceExtensionCount, deviceExtensions, features);
+        initLogicalDevice();
 
         // TODO
     }
@@ -112,7 +113,7 @@ namespace Core {
         }
     }
 
-    void Renderer::addInstanceLayers(uint32_t instanceLayerCount, const char const** instanceLayers) {
+    void Renderer::addInstanceLayers(uint32_t instanceLayerCount, const char** instanceLayers) {
         m_instanceLayers.reserve(instanceLayerCount);
 
         std::unordered_set<std::string> requestedLayers;
@@ -144,14 +145,46 @@ namespace Core {
         }
     }
 
-    void Renderer::initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features) {
-        // TODO Set device first
+    void Renderer::initPhysicalDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features) {
+        std::vector<vk::PhysicalDevice> physicalDevices = m_instance.enumeratePhysicalDevices();
+        if (physicalDevices.empty()) {
+            throw std::runtime_error("No physical devices found!");
+        }
 
-        addDeviceFeatures(features);
-        addDeviceExtensions(deviceExtensionCount, deviceExtensions);
-        addDeviceQueues();
+        bool deviceFound = false;
+        for (auto& device : physicalDevices) {
+            m_physicalDevice = device;
+
+            // Run every check so that all debug reasons for not selecting a device will be printed
+            bool suitable = true;
+            suitable &= addDeviceProperties();
+            suitable &= addDeviceFeatures(features);
+            suitable &= addDeviceExtensions(deviceExtensionCount, deviceExtensions);
+            suitable &= addDeviceQueues();
+
+            if (suitable) {
+                deviceFound = true;
+                break;
+            }
+        }
+
+        if (!deviceFound) {
+            throw std::runtime_error("No suitable devices found!");
+        }
 
         // TODO
+    }
+
+    bool Renderer::addDeviceProperties() {
+        m_deviceProperties = m_physicalDevice.getProperties();
+        std::cout << "Checking device: " << m_deviceProperties.deviceName << std::endl;
+
+        if (m_deviceProperties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu) {
+            std::cout << "    [Incorrect] Not a discrete GPU" << std::endl;
+            return false;
+        }
+
+        return true;
     }
 
     bool Renderer::addDeviceFeatures(vk::PhysicalDeviceFeatures features) {
@@ -163,7 +196,7 @@ namespace Core {
         m_deviceExtensions.reserve(deviceExtensionCount);
 
         std::unordered_set<std::string> requiredExtensions;
-        for (uint32_t i = 0; i < instanceExtensionCount; i++) {
+        for (uint32_t i = 0; i < deviceExtensionCount; i++) {
             requiredExtensions.emplace(deviceExtensions[i]);
         }
 
@@ -196,6 +229,10 @@ namespace Core {
         // TODO
 
         return false;
+    }
+
+    void Renderer::initLogicalDevice() {
+        // TODO
     }
 
     // -- end ctor and helpers --
