@@ -1,0 +1,19 @@
+---
+Language:        Cpp
+BasedOnStyle:  Mozilla
+
+AccessModifierOffset: -4
+BreakBeforeBraces: Attach
+ColumnLimit:     160
+CompactNamespaces: true
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+IndentCaseLabels: false
+IndentWidth:     4
+IndentWrappedFunctionNames: true
+NamespaceIndentation: All
+ObjCBlockIndentWidth: 4
+PointerAlignment: Left
+Standard:        Cpp11
+UseTab:          Never
+
