@@ -15,9 +15,10 @@ namespace Core {
                        uint32_t instanceLayerCount,
                        const char** instanceLayers,
                        uint32_t deviceExtensionCount,
-                       const char** deviceExtensions) {
+                       const char** deviceExtensions,
+                       vk::PhysicalDeviceFeatures features) {
         initInstance(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions, instanceLayerCount, instanceLayers);
-        initDevice(deviceExtensionCount, deviceExtensions);
+        initDevice(deviceExtensionCount, deviceExtensions, features);
 
         // TODO
     }
@@ -106,8 +107,8 @@ namespace Core {
         if (!requiredExtensions.empty()) {
             for (const std::string& extensionName : requiredExtensions) {
                 std::cout << "    [Failed] " << extensionName << std::endl;
-                throw std::runtime_error("Failed to find all desired instance extensions!");
             }
+            throw std::runtime_error("Failed to find all desired instance extensions!");
         }
     }
 
@@ -143,15 +144,58 @@ namespace Core {
         }
     }
 
-    void Renderer::initDevice(uint32_t deviceExtensionCount, const char const** deviceExtensions) {
+    void Renderer::initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features) {
+        // TODO Set device first
+
+        addDeviceFeatures(features);
         addDeviceExtensions(deviceExtensionCount, deviceExtensions);
+        addDeviceQueues();
 
         // TODO
     }
 
-    void Renderer::addDeviceExtensions(uint32_t deviceExtensionCount, const char const** deviceExtensions) {
+    bool Renderer::addDeviceFeatures(vk::PhysicalDeviceFeatures features) {
+        m_features = features;
+        return true;
+    }
+
+    bool Renderer::addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions) {
         m_deviceExtensions.reserve(deviceExtensionCount);
+
+        std::unordered_set<std::string> requiredExtensions;
+        for (uint32_t i = 0; i < instanceExtensionCount; i++) {
+            requiredExtensions.emplace(deviceExtensions[i]);
+        }
+
+        std::vector<vk::ExtensionProperties> extensionProperties = vk::enumerateInstanceExtensionProperties();
+        std::cout << "    Supported Device Extensions:" << std::endl;
+        for (auto& extension : extensionProperties) {
+            std::cout << "        ";
+
+            auto search = requiredExtensions.find(std::string(extension.extensionName));
+            if (search != requiredExtensions.end()) {
+                m_deviceExtensions.push_back(extension);
+                requiredExtensions.erase(search);
+                std::cout << "[Enabled] ";
+            }
+
+            std::cout << extension.extensionName << std::endl;
+        }
+
+        // Make sure all desired extensions were found
+        if (!requiredExtensions.empty()) {
+            for (const std::string& extensionName : requiredExtensions) {
+                std::cout << "        [Missing] " << extensionName << std::endl;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    bool Renderer::addDeviceQueues() {
         // TODO
+
+        return false;
     }
 
     // -- end ctor and helpers --

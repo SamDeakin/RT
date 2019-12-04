@@ -23,38 +23,6 @@ const char* DESIRED_DEVICE_EXTENSIONS[] = {
 };
 
 bool
-check_device_extensions(vk::PhysicalDevice& device) {
-    std::size_t desiredExtensionCount = sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(const char*);
-    // A bitmask initialized to false, to check off extensions as we find them
-    std::vector<bool> foundExtensions(desiredExtensionCount, false);
-
-    std::cout << "    Supported Device Extensions:" << std::endl;
-    std::vector<vk::ExtensionProperties> extensionProperties = device.enumerateDeviceExtensionProperties();
-    for (auto& extension : extensionProperties) {
-        std::cout << "        ";
-        for (std::size_t i = 0; i < desiredExtensionCount; i++) {
-            if (!strcmp(DESIRED_DEVICE_EXTENSIONS[i], extension.extensionName)) {
-                foundExtensions[i] = true;
-                std::cout << "[Enabled] ";
-            }
-        }
-
-        std::cout << extension.extensionName << std::endl;
-    }
-
-    // Make sure all desired extensions were found
-    bool allFound = true;
-    for (std::size_t i = 0; i < desiredExtensionCount; i++) {
-        if (!foundExtensions[i]) {
-            std::cout << "    [Missing] " << DESIRED_DEVICE_EXTENSIONS[i] << std::endl;
-            allFound = false;
-        }
-    }
-
-    return allFound;
-}
-
-bool
 check_device_queue_families(vk::PhysicalDevice& device) {
     std::cout << "    Queue Families:" << std::endl;
     std::vector<vk::QueueFamilyProperties2> queueFamilies = device.getQueueFamilyProperties2();

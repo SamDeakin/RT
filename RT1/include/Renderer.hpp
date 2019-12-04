@@ -21,7 +21,8 @@ namespace Core {
                  uint32_t instanceLayerCount,
                  const char** instanceLayers,
                  uint32_t deviceExtensionCount,
-                 const char** deviceExtensions);
+                 const char** deviceExtensions,
+                 vk::PhysicalDeviceFeatures features);
 
         Renderer(const Renderer&) = delete;
         void operator=(const Renderer&) = delete;
@@ -32,23 +33,34 @@ namespace Core {
         vk::Instance m_instance;
         vk::Device m_device;
 
-        // Tracking enabled layers and extensions
+        // Tracking enabled features
         std::vector<vk::ExtensionProperties> m_instanceExtensions;
-        std::vector<vk::ExtensionProperties> m_deviceExtensions;
         std::vector<vk::LayerProperties> m_instanceLayers;
+        std::vector<vk::ExtensionProperties> m_deviceExtensions;
+        std::vector<vk::DeviceQueueInfo2> m_deviceQueues;
+        vk::PhysicalDeviceFeatures m_features;
 
         // -- ctor helper functions --
 
+        /// Initialize m_instance
         void initInstance(uint32_t glfwExtensionCount,
                           const char** glfwExtensions,
                           uint32_t instanceExtensionCount,
                           const char** instanceExtensions,
                           uint32_t instanceLayerCount,
                           const char** instanceLayers);
+        /// Used by initInstance
         void addInstanceExtensions(uint32_t glfwExtensionCount, const char** glfwExtensions, uint32_t instanceExtensionCount, const char** instanceExtensions);
         void addInstanceLayers(uint32_t instanceLayerCount, const char** instanceLayers);
-        void initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions);
-        void addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions);
+
+        /// Initialize m_device
+        void initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions, vk::PhysicalDeviceFeatures features);
+        /// Used by initDevice: these will be called for a candidate device
+        /// They are nodiscard because the device may not be suitable, in which case the function did not complete successfully
+        /// They must be retried with a new device or the program should exit.
+        [[nodiscard]] bool addDeviceFeatures(vk::PhysicalDeviceFeatures features);
+        [[nodiscard]] bool addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions);
+        [[nodiscard]] bool addDeviceQueues();
 
         // -- end ctor helper functions --
     };
