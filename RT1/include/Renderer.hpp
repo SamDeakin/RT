@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 namespace Core {
 
@@ -15,13 +15,13 @@ namespace Core {
          * @param deviceExtensions: Desired device extensions
          */
         Renderer(uint32_t glfwExtensionCount,
-                 const char const** glfwExtensions,
+                 const char** glfwExtensions,
                  uint32_t instanceExtensionCount,
-                 const char const** instanceExtensions,
+                 const char** instanceExtensions,
                  uint32_t instanceLayerCount,
-                 const char const** instanceLayers,
+                 const char** instanceLayers,
                  uint32_t deviceExtensionCount,
-                 const char const** deviceExtensions);
+                 const char** deviceExtensions);
 
         Renderer(const Renderer&) = delete;
         void operator=(const Renderer&) = delete;
@@ -40,21 +40,15 @@ namespace Core {
         // -- ctor helper functions --
 
         void initInstance(uint32_t glfwExtensionCount,
-                          const char const** glfwExtensions,
+                          const char** glfwExtensions,
                           uint32_t instanceExtensionCount,
-                          const char const** instanceExtensions,
+                          const char** instanceExtensions,
                           uint32_t instanceLayerCount,
-                          const char const** instanceLayers);
-        void addInstanceExtensions(uint32_t glfwExtensionCount,
-                                   const char const** glfwExtensions,
-                                   uint32_t instanceExtensionCount,
-                                   const char const** instanceExtensions);
-        void addInstanceLayers(uint32_t instanceLayerCount,
-                               const char const** instanceLayers);
-        void initDevice(uint32_t deviceExtensionCount,
-                        const char const** deviceExtensions);
-        void addDeviceExtensions(uint32_t deviceExtensionCount,
-                                 const char const** deviceExtensions);
+                          const char** instanceLayers);
+        void addInstanceExtensions(uint32_t glfwExtensionCount, const char** glfwExtensions, uint32_t instanceExtensionCount, const char** instanceExtensions);
+        void addInstanceLayers(uint32_t instanceLayerCount, const char** instanceLayers);
+        void initDevice(uint32_t deviceExtensionCount, const char** deviceExtensions);
+        void addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions);
 
         // -- end ctor helper functions --
     };

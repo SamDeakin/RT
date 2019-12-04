@@ -22,41 +22,6 @@ const char* DESIRED_DEVICE_EXTENSIONS[] = {
     VK_NV_RAY_TRACING_EXTENSION_NAME,
 };
 
-std::vector<const char*>
-get_instance_layers() {
-    std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
-    std::vector<const char*> layerNames;
-
-    std::size_t desiredLayerCount = sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS));
-    // A bitmask initialized to false, to check off extensions as we find them
-    std::vector<bool> foundLayers(desiredLayerCount, false);
-
-    std::cout << "Supported Instance Layers:" << std::endl;
-    for (auto& layer : layerProperties) {
-        std::cout << "    ";
-
-        for (std::size_t i = 0; i < desiredLayerCount; i++) {
-            if (!strcmp(DESIRED_INSTANCE_LAYERS[i], layer.layerName)) {
-                // Push the static name, the other may be destroyed when we are done with the extension list.
-                layerNames.push_back(DESIRED_INSTANCE_LAYERS[i]);
-                foundLayers[i] = true;
-                std::cout << "[Enabled] ";
-            }
-        }
-
-        std::cout << layer.layerName << std::endl;
-    }
-
-    // We don't error check missing layers: they may just not be installed
-    for (std::size_t i = 0; i < desiredLayerCount; i++) {
-        if (!foundLayers[i]) {
-            std::cout << "    [Missing] " << DESIRED_INSTANCE_EXTENSIONS[i] << std::endl;
-        }
-    }
-
-    return layerNames;
-}
-
 vk::Instance
 init_vulkan() {
 

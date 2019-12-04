@@ -9,13 +9,13 @@ namespace Core {
     // -- ctor and helpers --
 
     Renderer::Renderer(uint32_t glfwExtensionCount,
-                       const char const** glfwExtensions,
+                       const char** glfwExtensions,
                        uint32_t instanceExtensionCount,
-                       const char const** instanceExtensions,
+                       const char** instanceExtensions,
                        uint32_t instanceLayerCount,
-                       const char const** instanceLayers,
+                       const char** instanceLayers,
                        uint32_t deviceExtensionCount,
-                       const char const** deviceExtensions) {
+                       const char** deviceExtensions) {
         initInstance(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions, instanceLayerCount, instanceLayers);
         initDevice(deviceExtensionCount, deviceExtensions);
 
@@ -23,11 +23,11 @@ namespace Core {
     }
 
     void Renderer::initInstance(uint32_t glfwExtensionCount,
-                                const char const** glfwExtensions,
+                                const char** glfwExtensions,
                                 uint32_t instanceExtensionCount,
-                                const char const** instanceExtensions,
+                                const char** instanceExtensions,
                                 uint32_t instanceLayerCount,
-                                const char const** instanceLayers) {
+                                const char** instanceLayers) {
         addInstanceExtensions(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions);
         addInstanceLayers(instanceLayerCount, instanceLayers);
 
@@ -35,9 +35,9 @@ namespace Core {
     }
 
     void Renderer::addInstanceExtensions(uint32_t glfwExtensionCount,
-                                         const char const** glfwExtensions,
+                                         const char** glfwExtensions,
                                          uint32_t instanceExtensionCount,
-                                         const char const** instanceExtensions) {
+                                         const char** instanceExtensions) {
         m_instanceExtensions.reserve(glfwExtensionCount + instanceExtensionCount);
 
         // Build a set of all extensions we are searching for.
@@ -69,7 +69,7 @@ namespace Core {
         // Make sure all desired extensions were found
         if (!requiredExtensions.empty()) {
             for (const std::string& extensionName : requiredExtensions) {
-                std::cout << "    [Missing] " << extensionName << std::endl;
+                std::cout << "    [Failed] " << extensionName << std::endl;
                 throw std::runtime_error("Failed to find all desired instance extensions!");
             }
         }
@@ -77,7 +77,34 @@ namespace Core {
 
     void Renderer::addInstanceLayers(uint32_t instanceLayerCount, const char const** instanceLayers) {
         m_instanceLayers.reserve(instanceLayerCount);
-        // TODO
+
+        std::unordered_set<std::string> requestedLayers;
+        for (uint32_t i = 0; i < instanceLayerCount; i++) {
+            requestedLayers.emplace(instanceLayers[i]);
+        }
+
+        std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
+        std::cout << "Supported Instance Layers:" << std::endl;
+        for (auto& layer : layerProperties) {
+            std::cout << "    ";
+
+            auto search = requestedLayers.find(std::string(layer.layerName));
+            if (search != requestedLayers.end()) {
+                // Push the static name, the other may be destroyed when we are done with the extension list.
+                m_instanceLayers.push_back(layer);
+                requestedLayers.erase(search);
+                std::cout << "[Enabled] ";
+            }
+
+            std::cout << layer.layerName << std::endl;
+        }
+
+        // We don't error check missing layers: they may just not be installed
+        if (!requestedLayers.empty()) {
+            for (const std::string& layerName : requestedLayers) {
+                std::cout << "    [Missing] " << layerName << std::endl;
+            }
+        }
     }
 
     void Renderer::initDevice(uint32_t deviceExtensionCount, const char const** deviceExtensions) {
@@ -93,7 +120,7 @@ namespace Core {
 
     // -- end ctor and helpers --
 
-    Renderer::~Renderer() {
+    Renderer::~Renderer() noexcept {
         m_device.destroy();
         m_instance.destroy();
     }
