@@ -41,7 +41,7 @@ namespace Core {
         vk::PhysicalDeviceProperties m_deviceProperties;
         vk::PhysicalDeviceFeatures m_features;
         std::vector<vk::ExtensionProperties> m_deviceExtensions;
-        std::vector<vk::DeviceQueueInfo2> m_deviceQueues;
+        std::vector<vk::QueueFamilyProperties> m_deviceQueueFamilies;
 
         /// Vulkan logical device configuration
         vk::Device m_device;

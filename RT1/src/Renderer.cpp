@@ -65,8 +65,7 @@ namespace Core {
         instanceCreateInfo.ppEnabledLayerNames = layers.data();
 #endif
 
-        vk::Instance instance;
-        vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
+        vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &m_instance);
         if (result != vk::Result::eSuccess) {
             throw std::runtime_error("Failed to create Vulkan instance!");
         }
@@ -171,8 +170,6 @@ namespace Core {
         if (!deviceFound) {
             throw std::runtime_error("No suitable devices found!");
         }
-
-        // TODO
     }
 
     bool Renderer::addDeviceProperties() {
@@ -200,7 +197,7 @@ namespace Core {
             requiredExtensions.emplace(deviceExtensions[i]);
         }
 
-        std::vector<vk::ExtensionProperties> extensionProperties = vk::enumerateInstanceExtensionProperties();
+        std::vector<vk::ExtensionProperties> extensionProperties = m_physicalDevice.enumerateDeviceExtensionProperties();
         std::cout << "    Supported Device Extensions:" << std::endl;
         for (auto& extension : extensionProperties) {
             std::cout << "        ";
@@ -226,9 +223,26 @@ namespace Core {
     }
 
     bool Renderer::addDeviceQueues() {
-        // TODO
+        m_deviceQueueFamilies = m_physicalDevice.getQueueFamilyProperties();
 
-        return false;
+        bool graphicsFound = false;
+        std::cout << "    Queue Families:" << std::endl;
+        for (auto& family : m_deviceQueueFamilies) {
+            std::cout << "        " << to_string(family.queueFlags);
+            std::cout << " " << family.queueCount << std::endl;
+
+            if (family.queueFlags & vk::QueueFlagBits::eGraphics) {
+                graphicsFound = true;
+            }
+        }
+
+        if (!graphicsFound) {
+            std::cout << "        No graphics queue found" << std::endl;
+        } else {
+            std::cout << "        Graphics queue found" << std::endl;
+        }
+
+        return graphicsFound;
     }
 
     void Renderer::initLogicalDevice() {
