@@ -246,7 +246,50 @@ namespace Core {
     }
 
     void Renderer::initLogicalDevice() {
-        // TODO
+        std::vector<uint32_t> queuesPerFamily(m_deviceQueueFamilies.size(), 0u);
+        uint32_t graphicsQueue, transferQueue;
+
+        for (uint32_t i = 0; i < m_deviceQueueFamilies.size(); i++) {
+            if (m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+                graphicsQueue = i;
+                queuesPerFamily[i]++;
+                break;
+            }
+        }
+
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfo;
+        for (uint32_t i = 0; i < queuesPerFamily.size(); i++) {
+            if (queuesPerFamily[i] > 0) {
+                std::vector<float> queuePriorities(queuesPerFamily[i], queuesPerFamily[i] / 1.0f);
+
+                queueCreateInfo.emplace_back(
+                    vk::DeviceQueueCreateFlags(),
+                    i,
+                    queuesPerFamily[i],
+                    queuePriorities.data()
+                );
+            }
+        }
+
+        std::vector<const char*> deviceExtensionNames;
+        for (auto& extension : m_deviceExtensions) {
+            deviceExtensionNames.push_back(extension.extensionName);
+        }
+
+        vk::DeviceCreateInfo deviceCreateInfo{
+            vk::DeviceCreateFlags(),
+            static_cast<uint32_t>(queueCreateInfo.size()),
+            queueCreateInfo.data(),
+            0,
+            nullptr,
+            static_cast<uint32_t>(deviceExtensionNames.size()),
+            deviceExtensionNames.data(),
+            &m_features,
+        };
+
+        m_device = m_physicalDevice.createDevice(deviceCreateInfo);
+
+
     }
 
     // -- end ctor and helpers --

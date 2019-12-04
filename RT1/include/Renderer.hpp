@@ -45,6 +45,8 @@ namespace Core {
 
         /// Vulkan logical device configuration
         vk::Device m_device;
+        std::vector<vk::Queue> m_graphicsQueues;
+        std::vector<vk::Queue> m_transferQueues;
 
         // -- ctor helper functions --
 
