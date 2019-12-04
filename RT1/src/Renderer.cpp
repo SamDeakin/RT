@@ -31,7 +31,43 @@ namespace Core {
         addInstanceExtensions(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions);
         addInstanceLayers(instanceLayerCount, instanceLayers);
 
-        // TODO
+        vk::ApplicationInfo appInfo{
+            "RT1",
+            VK_MAKE_VERSION(1, 0, 0),
+            "TestEngine",
+            VK_MAKE_VERSION(1, 0, 0),
+            VK_API_VERSION_1_1,
+        };
+
+        std::vector<const char*> allExtensions;
+        for (vk::ExtensionProperties extension : m_instanceExtensions) {
+            allExtensions.push_back(extension.extensionName);
+        }
+
+        vk::InstanceCreateInfo instanceCreateInfo{
+            vk::InstanceCreateFlags(),
+            &appInfo,
+            0,
+            nullptr,
+            static_cast<uint32_t>(allExtensions.size()),
+            allExtensions.data(),
+        };
+
+#ifdef _DEBUG
+        // Since layers generally just add debug info we don't want to add them outside of debug
+        std::vector<const char*> layers;
+        for (vk::LayerProperties layer : m_instanceLayers) {
+            layers.push_back(layer.layerName);
+        }
+        instanceCreateInfo.enabledLayerCount = layers.size();
+        instanceCreateInfo.ppEnabledLayerNames = layers.data();
+#endif
+
+        vk::Instance instance;
+        vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
+        if (result != vk::Result::eSuccess) {
+            throw std::runtime_error("Failed to create Vulkan instance!");
+        }
     }
 
     void Renderer::addInstanceExtensions(uint32_t glfwExtensionCount,

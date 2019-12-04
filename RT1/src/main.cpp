@@ -22,38 +22,6 @@ const char* DESIRED_DEVICE_EXTENSIONS[] = {
     VK_NV_RAY_TRACING_EXTENSION_NAME,
 };
 
-vk::Instance
-init_vulkan() {
-
-    vk::ApplicationInfo appInfo = {};
-    appInfo.pApplicationName = "RT1";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "TestEngine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_1;
-
-    std::vector<const char*> allExtensions = get_instance_extensions(glfwExtensions, glfwExtensionCount);
-
-    vk::InstanceCreateInfo instanceCreateInfo{
-        vk::InstanceCreateFlags(), &appInfo, 0, nullptr, static_cast<uint32_t>(allExtensions.size()), allExtensions.data(),
-    };
-
-#ifdef _DEBUG
-    // Since layers generally just add debug info we don't want to add them outside of debug
-    std::vector<const char*> layers = get_instance_layers();
-    instanceCreateInfo.enabledLayerCount = layers.size();
-    instanceCreateInfo.ppEnabledLayerNames = layers.data();
-#endif
-
-    vk::Instance instance;
-    vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
-    if (result != vk::Result::eSuccess) {
-        throw std::runtime_error("Failed to create Vulkan instance!");
-    }
-
-    return instance;
-}
-
 bool
 check_device_extensions(vk::PhysicalDevice& device) {
     std::size_t desiredExtensionCount = sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(const char*);

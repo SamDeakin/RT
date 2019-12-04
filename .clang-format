@@ -3,11 +3,14 @@ Language:        Cpp
 BasedOnStyle:  Mozilla
 
 AccessModifierOffset: -4
+BinPackArguments: false
+BinPackParameters: false
 BreakBeforeBraces: Attach
 ColumnLimit:     160
 CompactNamespaces: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
 IndentCaseLabels: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false
