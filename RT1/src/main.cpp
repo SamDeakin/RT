@@ -6,7 +6,8 @@
 #include <iostream>
 #include <vector>
 
-#include "Renderer.hpp"
+#include "Window.hpp"
+#include "WindowedRenderer.hpp"
 
 const char* DESIRED_INSTANCE_EXTENSIONS[] = {
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
@@ -38,13 +39,13 @@ main() {
     // No features required
     vk::PhysicalDeviceFeatures features{};
 
-    Core::Renderer renderer(glfwExtensionCount,
-                            glfwExtensions,
-                            sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
-                            DESIRED_INSTANCE_EXTENSIONS,
-                            sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS)),
-                            DESIRED_INSTANCE_LAYERS,
-                            sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
-                            DESIRED_DEVICE_EXTENSIONS,
-                            features);
+    Core::WindowedRenderer<Core::Window> renderer(glfwExtensionCount,
+                                                  glfwExtensions,
+                                                  sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
+                                                  DESIRED_INSTANCE_EXTENSIONS,
+                                                  sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS)),
+                                                  DESIRED_INSTANCE_LAYERS,
+                                                  sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
+                                                  DESIRED_DEVICE_EXTENSIONS,
+                                                  features);
 }

@@ -275,6 +275,7 @@ namespace Core {
         }
 
         if (!graphicsFound || !transferFound || !computeFound)
+            // TODO Split existing families into groups in this case
             throw std::runtime_error("Couldn't find all desired unique queue types within device");
 
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfo;
