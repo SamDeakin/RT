@@ -246,28 +246,47 @@ namespace Core {
     }
 
     void Renderer::initLogicalDevice() {
-        std::vector<uint32_t> queuesPerFamily(m_deviceQueueFamilies.size(), 0u);
-        uint32_t graphicsQueue, transferQueue;
+        std::vector<uint32_t> queuesDesiredPerFamily(m_deviceQueueFamilies.size(), 0u);
+        uint32_t graphicsQueue, transferQueue, computeQueue;
+        uint32_t graphicsQueueCount = 0, transferQueueCount = 0, computeQueueCount = 0;
 
+        // The first queue with graphics is chosen for graphics
+        // The first queue with only transfer is chosen for transfer, and the same for compute
+        bool graphicsFound = false;
+        bool transferFound = false;
+        bool computeFound = false;
         for (uint32_t i = 0; i < m_deviceQueueFamilies.size(); i++) {
-            if (m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
+            if (!graphicsFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
                 graphicsQueue = i;
-                queuesPerFamily[i]++;
-                break;
+                graphicsQueueCount = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                graphicsFound = true;
+            } else if (!transferFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eTransfer) {
+                transferQueue = i;
+                transferQueueCount = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                transferFound = true;
+            } else if (!computeFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eCompute) {
+                computeQueue = i;
+                computeQueueCount = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                computeFound = true;
             }
         }
 
-        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfo;
-        for (uint32_t i = 0; i < queuesPerFamily.size(); i++) {
-            if (queuesPerFamily[i] > 0) {
-                std::vector<float> queuePriorities(queuesPerFamily[i], queuesPerFamily[i] / 1.0f);
+        if (!graphicsFound || !transferFound || !computeFound)
+            throw std::runtime_error("Couldn't find all desired unique queue types within device");
 
-                queueCreateInfo.emplace_back(
-                    vk::DeviceQueueCreateFlags(),
-                    i,
-                    queuesPerFamily[i],
-                    queuePriorities.data()
-                );
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfo;
+        std::vector<std::vector<float>> queuePrioritiesLists;
+        for (uint32_t i = 0; i < queuesDesiredPerFamily.size(); i++) {
+            if (queuesDesiredPerFamily[i] > 0) {
+                std::vector<float> queuePriorities(queuesDesiredPerFamily[i], 1.0 / queuesDesiredPerFamily[i]);
+
+                queueCreateInfo.emplace_back(vk::DeviceQueueCreateFlags(), i, queuesDesiredPerFamily[i], queuePriorities.data());
+
+                // Move onto the list of lists to prevent the data from being freed
+                queuePrioritiesLists.emplace_back(std::move(queuePriorities));
             }
         }
 
@@ -289,7 +308,15 @@ namespace Core {
 
         m_device = m_physicalDevice.createDevice(deviceCreateInfo);
 
-
+        for (uint32_t queueIndex = 0; queueIndex < graphicsQueueCount; queueIndex++) {
+            m_graphicsQueues.emplace_back(std::move(m_device.getQueue(graphicsQueue, queueIndex)));
+        }
+        for (uint32_t queueIndex = 0; queueIndex < transferQueueCount; queueIndex++) {
+            m_transferQueues.emplace_back(std::move(m_device.getQueue(transferQueue, queueIndex)));
+        }
+        for (uint32_t queueIndex = 0; queueIndex < computeQueueCount; queueIndex++) {
+            m_computeQueues.emplace_back(std::move(m_device.getQueue(computeQueue, queueIndex)));
+        }
     }
 
     // -- end ctor and helpers --

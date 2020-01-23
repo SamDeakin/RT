@@ -30,7 +30,6 @@ namespace Core {
         ~Renderer() noexcept;
 
     private:
-
         /// Vulkan instance configuration
         vk::Instance m_instance;
         std::vector<vk::ExtensionProperties> m_instanceExtensions;
@@ -47,6 +46,7 @@ namespace Core {
         vk::Device m_device;
         std::vector<vk::Queue> m_graphicsQueues;
         std::vector<vk::Queue> m_transferQueues;
+        std::vector<vk::Queue> m_computeQueues;
 
         // -- ctor helper functions --
 
