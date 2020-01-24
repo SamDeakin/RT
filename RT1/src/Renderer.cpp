@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_set>
 
+#define DESIRED_PRESENT_QUEUES 1
+
 namespace Core {
 
     // -- ctor and helpers --
@@ -210,14 +212,23 @@ namespace Core {
         m_deviceQueueFamilies = m_physicalDevice.getQueueFamilyProperties();
 
         bool graphicsFound = false;
+        bool presentFound = false;
         std::cout << "    Queue Families:" << std::endl;
-        for (auto& family : m_deviceQueueFamilies) {
+        for (uint32_t familyIndex = 0; familyIndex < m_deviceQueueFamilies.size(); familyIndex++) {
+            auto& family = m_deviceQueueFamilies[familyIndex];
             std::cout << "        " << to_string(family.queueFlags);
-            std::cout << " " << family.queueCount << std::endl;
+            std::cout << " " << family.queueCount;
 
             if (family.queueFlags & vk::QueueFlagBits::eGraphics) {
                 graphicsFound = true;
             }
+
+            if (m_physicalDevice.getSurfaceSupportKHR(familyIndex, m_surface)) {
+                presentFound = true;
+                std::cout << " [Present]";
+            }
+
+            std::cout << std::endl;
         }
 
         if (!graphicsFound) {
@@ -226,39 +237,66 @@ namespace Core {
             std::cout << "        Graphics queue found" << std::endl;
         }
 
+        if (!presentFound) {
+            std::cout << "        No present queue found" << std::endl;
+        } else {
+            std::cout << "        Present queue found" << std::endl;
+        }
+
         return graphicsFound;
     }
 
     void Renderer::initLogicalDevice() {
         std::vector<uint32_t> queuesDesiredPerFamily(m_deviceQueueFamilies.size(), 0u);
-        uint32_t graphicsQueue, transferQueue, computeQueue;
-        uint32_t graphicsQueueCount = 0, transferQueueCount = 0, computeQueueCount = 0;
+        uint32_t graphicsQueueFamily;
+        uint32_t presentQueueFamily;
+        uint32_t transferQueueFamily;
+        uint32_t computeQueueFamily;
+        uint32_t graphicsQueueCount = 0;
+        uint32_t presentQueueCount = 0;
+        uint32_t transferQueueCount = 0;
+        uint32_t computeQueueCount = 0;
 
         // The first queue with graphics is chosen for graphics
         // The first queue with only transfer is chosen for transfer, and the same for compute
         bool graphicsFound = false;
+        bool presentFound = false;
         bool transferFound = false;
         bool computeFound = false;
         for (uint32_t i = 0; i < m_deviceQueueFamilies.size(); i++) {
             if (!graphicsFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
-                graphicsQueue = i;
+                graphicsQueueFamily = i;
                 graphicsQueueCount = m_deviceQueueFamilies[i].queueCount;
-                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = graphicsQueueCount;
                 graphicsFound = true;
             } else if (!transferFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eTransfer) {
-                transferQueue = i;
+                transferQueueFamily = i;
                 transferQueueCount = m_deviceQueueFamilies[i].queueCount;
-                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = transferQueueCount;
                 transferFound = true;
             } else if (!computeFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eCompute) {
-                computeQueue = i;
+                computeQueueFamily = i;
                 computeQueueCount = m_deviceQueueFamilies[i].queueCount;
-                queuesDesiredPerFamily[i] = m_deviceQueueFamilies[i].queueCount;
+                queuesDesiredPerFamily[i] = computeQueueCount;
                 computeFound = true;
+            }
+
+            // We steal the first few queues from whatever queue can present later, as it is probably
+            // shared with the graphics queue
+            if (!presentFound && m_physicalDevice.getSurfaceSupportKHR(i, m_surface)) {
+                presentQueueFamily = i;
+                presentQueueCount = DESIRED_PRESENT_QUEUES;
+                presentFound = true;
+
+                if (graphicsFound && graphicsQueueFamily == presentQueueFamily) {
+                    graphicsQueueCount -= presentQueueCount; // Assumes that queue usage is exclusive (its not)
+                } else {
+                    queuesDesiredPerFamily[i] = presentQueueCount;
+                }
             }
         }
 
-        if (!graphicsFound || !transferFound || !computeFound)
+        if (!graphicsFound || !presentFound || !transferFound || !computeFound)
             // TODO Split existing families into groups in this case
             throw std::runtime_error("Couldn't find all desired unique queue types within device");
 
@@ -267,6 +305,8 @@ namespace Core {
         for (uint32_t i = 0; i < queuesDesiredPerFamily.size(); i++) {
             if (queuesDesiredPerFamily[i] > 0) {
                 std::vector<float> queuePriorities(queuesDesiredPerFamily[i], 1.0 / queuesDesiredPerFamily[i]);
+
+                // TODO Adjust queue priorities for the present queues if they are starved by the graphics queues in practice
 
                 queueCreateInfo.emplace_back(vk::DeviceQueueCreateFlags(), i, queuesDesiredPerFamily[i], queuePriorities.data());
 
@@ -293,14 +333,25 @@ namespace Core {
 
         m_device = m_physicalDevice.createDevice(deviceCreateInfo);
 
+        // The present queues take first, in case that matters
+        std::vector<vk::Queue>& presentQueueList = m_queues[QueueType::Present];
+        for (uint32_t queueIndex = 0; queueIndex < presentQueueCount; queueIndex++) {
+            presentQueueList.emplace_back(m_device.getQueue(presentQueueFamily, queueIndex));
+        }
+
+        std::vector<vk::Queue>& graphicsQueueList = m_queues[QueueType::Graphics];
         for (uint32_t queueIndex = 0; queueIndex < graphicsQueueCount; queueIndex++) {
-            m_graphicsQueues.emplace_back(std::move(m_device.getQueue(graphicsQueue, queueIndex)));
+            graphicsQueueList.emplace_back(m_device.getQueue(graphicsQueueFamily, queueIndex));
         }
+
+        std::vector<vk::Queue>& transferQueueList = m_queues[QueueType::Transfer];
         for (uint32_t queueIndex = 0; queueIndex < transferQueueCount; queueIndex++) {
-            m_transferQueues.emplace_back(std::move(m_device.getQueue(transferQueue, queueIndex)));
+            transferQueueList.emplace_back(m_device.getQueue(transferQueueFamily, queueIndex));
         }
+
+        std::vector<vk::Queue>& computeQueueList = m_queues[QueueType::Compute];
         for (uint32_t queueIndex = 0; queueIndex < computeQueueCount; queueIndex++) {
-            m_computeQueues.emplace_back(std::move(m_device.getQueue(computeQueue, queueIndex)));
+            computeQueueList.emplace_back(m_device.getQueue(computeQueueFamily, queueIndex));
         }
     }
 

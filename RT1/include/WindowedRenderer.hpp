@@ -43,7 +43,6 @@ namespace Core {
     private:
         /// Window and display configuration
         std::unique_ptr<W> m_window;
-        vk::SurfaceKHR m_surface;
 
         /// Initialize m_window
         void initWindow();
@@ -86,7 +85,7 @@ namespace Core {
         VkSurfaceKHR surface = {};
         VkResult result = glfwCreateWindowSurface(m_instance, nativeWindow, nullptr, &surface);
         if (result) {
-            throw std::runtime_error("Failed to create window surface! " + result);
+            throw std::runtime_error("Failed to create window surface! " + std::to_string(result));
         }
 
         m_surface = surface;

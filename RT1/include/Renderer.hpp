@@ -1,5 +1,8 @@
 #pragma once
 
+#include "RenderTypes.hpp"
+
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
@@ -34,9 +37,10 @@ namespace Core {
 
         /// Vulkan logical device configuration
         vk::Device m_device;
-        std::vector<vk::Queue> m_graphicsQueues;
-        std::vector<vk::Queue> m_transferQueues;
-        std::vector<vk::Queue> m_computeQueues;
+        std::unordered_map<QueueType, std::vector<vk::Queue>> m_queues;
+
+        /// Vulkan surface configuration
+        vk::SurfaceKHR m_surface;
 
         // -- ctor helper functions --
 
