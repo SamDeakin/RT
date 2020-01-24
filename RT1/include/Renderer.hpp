@@ -41,6 +41,8 @@ namespace Core {
 
         /// Vulkan surface configuration
         vk::SurfaceKHR m_surface;
+        vk::SurfaceFormatKHR m_surfaceFormat;
+        vk::PresentModeKHR m_presentMode;
 
         // -- ctor helper functions --
 
@@ -64,6 +66,7 @@ namespace Core {
         [[nodiscard]] bool addDeviceFeatures(vk::PhysicalDeviceFeatures features);
         [[nodiscard]] bool addDeviceExtensions(uint32_t deviceExtensionCount, const char** deviceExtensions);
         [[nodiscard]] bool addDeviceQueues();
+        [[nodiscard]] bool chooseSwapchainSettings();
 
         /// Initialize m_device
         void initLogicalDevice();

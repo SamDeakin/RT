@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 
 #include <iostream>
+#include <set>
 #include <string>
 #include <unordered_set>
 
@@ -146,6 +147,7 @@ namespace Core {
             suitable &= addDeviceFeatures(features);
             suitable &= addDeviceExtensions(deviceExtensionCount, deviceExtensions);
             suitable &= addDeviceQueues();
+            suitable &= chooseSwapchainSettings();
 
             if (suitable) {
                 deviceFound = true;
@@ -353,6 +355,59 @@ namespace Core {
         for (uint32_t queueIndex = 0; queueIndex < computeQueueCount; queueIndex++) {
             computeQueueList.emplace_back(m_device.getQueue(computeQueueFamily, queueIndex));
         }
+    }
+
+    bool Renderer::chooseSwapchainSettings() {
+        std::cout << "    Surface Colour Formats:" << std::endl;
+        std::vector<vk::SurfaceFormatKHR> supportedFormats = m_physicalDevice.getSurfaceFormatsKHR(m_surface);
+        // Simple impl, just choose 8-bit format with srgb colour space
+        // Mostly cause I'm a scrub that doesn't have any HDR devices lol
+        bool formatFound = false;
+        for (auto& format : supportedFormats) {
+            std::cout << "        ";
+
+            // BGR appears to be more commonly supported than RGB
+            if (!formatFound && format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+                formatFound = true;
+                m_surfaceFormat = format;
+                std::cout << "[Selected] ";
+            }
+
+            std::cout << vk::to_string(format.format) << " | " << vk::to_string(format.colorSpace) << std::endl;
+        }
+        if (!formatFound) {
+            std::cout << "        [Missing] " << vk::to_string(vk::Format::eB8G8R8A8Unorm) << " | " << vk::to_string(vk::ColorSpaceKHR::eSrgbNonlinear)
+                      << std::endl;
+            return false;
+        }
+
+        std::vector<vk::PresentModeKHR> supportedPresentModes = m_physicalDevice.getSurfacePresentModesKHR(m_surface);
+        std::set<vk::PresentModeKHR> presentModeSet(supportedPresentModes.begin(), supportedPresentModes.end());
+        m_presentMode = vk::PresentModeKHR::eFifo; // Guaranteed to be supported
+        std::vector<vk::PresentModeKHR> desiredPresentModes{
+            vk::PresentModeKHR::eMailbox,
+            vk::PresentModeKHR::eImmediate,
+            vk::PresentModeKHR::eFifoRelaxed,
+        };
+
+        for (auto& mode : desiredPresentModes) {
+            if (presentModeSet.count(mode)) {
+                m_presentMode = mode;
+                break;
+            }
+        }
+
+        std::cout << "    Swapchain Present Modes:" << std::endl;
+        for (auto& mode : supportedPresentModes) {
+            std::cout << "        ";
+            if (mode == m_presentMode) {
+                std::cout << "[Selected] ";
+            }
+
+            std::cout << vk::to_string(mode) << std::endl;
+        }
+
+        return true;
     }
 
     // -- end ctor and helpers --
