@@ -5,31 +5,21 @@
 
 namespace Core {
 
+    /**
+     * A class for managing and accessing vulkan configuration. You probably don't want to construct
+     * this object directly, you should make a WindowedRenderer<Window> instead.
+     */
     class Renderer {
     public:
-        /**
-         * Construct a Renderer with the desired extensions and layers.
-         * Throws a std::runtimeException if it cannot be created.
-         * @param instanceExtensions: Desired instance extensions
-         * @param instanceLayers: Desired instance layers
-         * @param deviceExtensions: Desired device extensions
-         */
-        Renderer(uint32_t glfwExtensionCount,
-                 const char** glfwExtensions,
-                 uint32_t instanceExtensionCount,
-                 const char** instanceExtensions,
-                 uint32_t instanceLayerCount,
-                 const char** instanceLayers,
-                 uint32_t deviceExtensionCount,
-                 const char** deviceExtensions,
-                 vk::PhysicalDeviceFeatures features);
-
+        Renderer() = default;
         Renderer(const Renderer&) = delete;
+        Renderer(const Renderer&&) = delete;
         void operator=(const Renderer&) = delete;
+        void operator=(const Renderer&&) = delete;
 
-        ~Renderer() noexcept;
+        virtual ~Renderer() noexcept;
 
-    private:
+    protected:
         /// Vulkan instance configuration
         vk::Instance m_instance;
         std::vector<vk::ExtensionProperties> m_instanceExtensions;

@@ -8,22 +8,6 @@ namespace Core {
 
     // -- ctor and helpers --
 
-    Renderer::Renderer(uint32_t glfwExtensionCount,
-                       const char** glfwExtensions,
-                       uint32_t instanceExtensionCount,
-                       const char** instanceExtensions,
-                       uint32_t instanceLayerCount,
-                       const char** instanceLayers,
-                       uint32_t deviceExtensionCount,
-                       const char** deviceExtensions,
-                       vk::PhysicalDeviceFeatures features) {
-        initInstance(glfwExtensionCount, glfwExtensions, instanceExtensionCount, instanceExtensions, instanceLayerCount, instanceLayers);
-        initPhysicalDevice(deviceExtensionCount, deviceExtensions, features);
-        initLogicalDevice();
-
-        // TODO
-    }
-
     void Renderer::initInstance(uint32_t glfwExtensionCount,
                                 const char** glfwExtensions,
                                 uint32_t instanceExtensionCount,
@@ -42,7 +26,7 @@ namespace Core {
         };
 
         std::vector<const char*> allExtensions;
-        for (vk::ExtensionProperties extension : m_instanceExtensions) {
+        for (vk::ExtensionProperties& extension : m_instanceExtensions) {
             allExtensions.push_back(extension.extensionName);
         }
 

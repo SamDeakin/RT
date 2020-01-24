@@ -1,13 +1,13 @@
-#define GLFW_INCLUDE_VULKAN
+
+#include "Window.hpp"
+#include "WindowedRenderer.hpp"
+
 #include <GLFW/glfw3.h>
 #include <glm/vec4.hpp>
 #include <vulkan/vulkan.hpp>
 
 #include <iostream>
 #include <vector>
-
-#include "Window.hpp"
-#include "WindowedRenderer.hpp"
 
 const char* DESIRED_INSTANCE_EXTENSIONS[] = {
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
@@ -48,4 +48,8 @@ main() {
                                                   sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
                                                   DESIRED_DEVICE_EXTENSIONS,
                                                   features);
+
+    std::cout << "Waiting for keypress to exit..." << std::endl;
+    std::cin.ignore();
+    std::cin.get();
 }

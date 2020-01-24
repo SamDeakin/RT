@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Renderer.hpp"
+#include <Renderer.hpp>
+
+#include <GLFW/glfw3.h>
 
 namespace Core {
 
@@ -9,7 +11,10 @@ namespace Core {
         explicit Window(Renderer& renderer);
         virtual ~Window() noexcept;
 
+        GLFWwindow* getNativeWindow();
+
     protected:
         Renderer& m_renderer;
+        GLFWwindow* m_nativeWindow;
     };
 }
