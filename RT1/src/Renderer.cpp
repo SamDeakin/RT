@@ -413,6 +413,7 @@ namespace Core {
     // -- end ctor and helpers --
 
     Renderer::~Renderer() noexcept {
+        cleanupOldSwapchain();
         m_device.destroySwapchainKHR(m_swapchain);
         m_device.destroy();
         m_instance.destroy();
@@ -431,6 +432,8 @@ namespace Core {
         uint32_t imageArrayLayers = 1;
 
         // We only support rendering to texture for now
+        // TODO Ensure that the present queue is capable of transfers previously
+        // Solid chance it will be, as graphics/compute implies transfer
         vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eTransferDst;
 
         vk::SharingMode sharingMode = vk::SharingMode::eExclusive;
@@ -450,7 +453,7 @@ namespace Core {
         // We want to clip the portions of the window that are drawn to exclude covered portions
         vk::Bool32 clipMode = VK_TRUE;
 
-        vk::SwapchainCreateInfoKHR swapchainCreateInfo(vk::SwapchainCreateFlagsKHR(),
+        vk::SwapchainCreateInfoKHR swapchainCreateInfo{vk::SwapchainCreateFlagsKHR(),
                                                        m_surface,
                                                        minImageCount,
                                                        m_surfaceFormat.format,
@@ -465,10 +468,51 @@ namespace Core {
                                                        alphaBlend,
                                                        m_presentMode,
                                                        clipMode,
-                                                       m_swapchain);
+                                                       m_swapchain};
 
+        cleanupOldSwapchain();
         m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
+        initializeNewSwapchain();
+    }
+    void Renderer::cleanupOldSwapchain() {
+        m_swapchainImages.clear();
+
+        for (auto& imageView : m_swapchainImageViews) {
+            m_device.destroyImageView(imageView);
+        }
+        m_swapchainImageViews.clear();
+    }
+    void Renderer::initializeNewSwapchain() {
         m_swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
+
+        // Our textures are bgra but we want rgba so we must swizzle
+        vk::ComponentMapping componentMapping{
+            vk::ComponentSwizzle::eB,
+            vk::ComponentSwizzle::eG,
+            vk::ComponentSwizzle::eR,
+            vk::ComponentSwizzle::eA,
+        };
+        vk::ImageSubresourceRange subresourceRange{
+            vk::ImageAspectFlagBits::eColor,
+            0,
+            1,
+            0,
+            1,
+        };
+
+        m_swapchainImageViews.reserve(m_swapchainImages.size());
+        for (auto& image : m_swapchainImages) {
+            vk::ImageViewCreateInfo viewCreateInfo{
+                vk::ImageViewCreateFlags(),
+                image,
+                vk::ImageViewType::e2D,
+                m_surfaceFormat.format,
+                componentMapping,
+                subresourceRange,
+            };
+
+            m_swapchainImageViews.emplace_back(m_device.createImageView(viewCreateInfo));
+        }
     }
 
 }

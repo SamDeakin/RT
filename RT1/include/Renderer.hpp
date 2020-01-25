@@ -54,6 +54,7 @@ namespace Core {
         vk::SwapchainKHR m_swapchain;
         vk::Extent2D m_swapchainExtents;
         std::vector<vk::Image> m_swapchainImages;
+        std::vector<vk::ImageView> m_swapchainImageViews;
 
         // -- ctor helper functions --
 
@@ -83,6 +84,13 @@ namespace Core {
         void initLogicalDevice();
 
         // -- end ctor helper functions --
+
+        // -- swapchain creations helpers --
+
+        void cleanupOldSwapchain();
+        void initializeNewSwapchain();
+
+        // -- end swapchain creation helpers --
     };
 
 }
