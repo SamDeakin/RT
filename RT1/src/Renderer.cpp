@@ -250,14 +250,14 @@ namespace Core {
 
     void Renderer::initLogicalDevice() {
         std::vector<uint32_t> queuesDesiredPerFamily(m_deviceQueueFamilies.size(), 0u);
-        uint32_t graphicsQueueFamily;
-        uint32_t presentQueueFamily;
-        uint32_t transferQueueFamily;
-        uint32_t computeQueueFamily;
         uint32_t graphicsQueueCount = 0;
         uint32_t presentQueueCount = 0;
         uint32_t transferQueueCount = 0;
         uint32_t computeQueueCount = 0;
+        QueueGroup graphicsQueueGroup{.type = QueueType::Graphics};
+        QueueGroup presentQueueGroup{.type = QueueType::Present};
+        QueueGroup transferQueueGroup{.type = QueueType::Transfer};
+        QueueGroup computeQueueGroup{.type = QueueType::Compute};
 
         // The first queue with graphics is chosen for graphics
         // The first queue with only transfer is chosen for transfer, and the same for compute
@@ -267,17 +267,17 @@ namespace Core {
         bool computeFound = false;
         for (uint32_t i = 0; i < m_deviceQueueFamilies.size(); i++) {
             if (!graphicsFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
-                graphicsQueueFamily = i;
+                graphicsQueueGroup.familyIndex = i;
                 graphicsQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = graphicsQueueCount;
                 graphicsFound = true;
             } else if (!transferFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eTransfer) {
-                transferQueueFamily = i;
+                transferQueueGroup.familyIndex = i;
                 transferQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = transferQueueCount;
                 transferFound = true;
             } else if (!computeFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eCompute) {
-                computeQueueFamily = i;
+                computeQueueGroup.familyIndex = i;
                 computeQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = computeQueueCount;
                 computeFound = true;
@@ -286,11 +286,11 @@ namespace Core {
             // We steal the first few queues from whatever queue can present later, as it is probably
             // shared with the graphics queue
             if (!presentFound && m_physicalDevice.getSurfaceSupportKHR(i, m_surface)) {
-                presentQueueFamily = i;
+                presentQueueGroup.familyIndex = i;
                 presentQueueCount = DESIRED_PRESENT_QUEUES;
                 presentFound = true;
 
-                if (graphicsFound && graphicsQueueFamily == presentQueueFamily) {
+                if (graphicsFound && graphicsQueueGroup.familyIndex == presentQueueGroup.familyIndex) {
                     graphicsQueueCount -= presentQueueCount; // Assumes that queue usage is exclusive (its not)
                 } else {
                     queuesDesiredPerFamily[i] = presentQueueCount;
@@ -336,25 +336,25 @@ namespace Core {
         m_device = m_physicalDevice.createDevice(deviceCreateInfo);
 
         // The present queues take first, in case that matters
-        std::vector<vk::Queue>& presentQueueList = m_queues[QueueType::Present];
         for (uint32_t queueIndex = 0; queueIndex < presentQueueCount; queueIndex++) {
-            presentQueueList.emplace_back(m_device.getQueue(presentQueueFamily, queueIndex));
+            presentQueueGroup.queues.emplace_back(m_device.getQueue(presentQueueGroup.familyIndex, queueIndex));
         }
+        m_queues[QueueType::Present] = std::move(presentQueueGroup);
 
-        std::vector<vk::Queue>& graphicsQueueList = m_queues[QueueType::Graphics];
         for (uint32_t queueIndex = 0; queueIndex < graphicsQueueCount; queueIndex++) {
-            graphicsQueueList.emplace_back(m_device.getQueue(graphicsQueueFamily, queueIndex));
+            graphicsQueueGroup.queues.emplace_back(m_device.getQueue(graphicsQueueGroup.familyIndex, queueIndex));
         }
+        m_queues[QueueType::Graphics] = std::move(graphicsQueueGroup);
 
-        std::vector<vk::Queue>& transferQueueList = m_queues[QueueType::Transfer];
         for (uint32_t queueIndex = 0; queueIndex < transferQueueCount; queueIndex++) {
-            transferQueueList.emplace_back(m_device.getQueue(transferQueueFamily, queueIndex));
+            transferQueueGroup.queues.emplace_back(m_device.getQueue(transferQueueGroup.familyIndex, queueIndex));
         }
+        m_queues[QueueType::Transfer] = std::move(transferQueueGroup);
 
-        std::vector<vk::Queue>& computeQueueList = m_queues[QueueType::Compute];
         for (uint32_t queueIndex = 0; queueIndex < computeQueueCount; queueIndex++) {
-            computeQueueList.emplace_back(m_device.getQueue(computeQueueFamily, queueIndex));
+            computeQueueGroup.queues.emplace_back(m_device.getQueue(computeQueueGroup.familyIndex, queueIndex));
         }
+        m_queues[QueueType::Compute] = std::move(computeQueueGroup);
     }
 
     bool Renderer::chooseSwapchainSettings() {
@@ -413,8 +413,61 @@ namespace Core {
     // -- end ctor and helpers --
 
     Renderer::~Renderer() noexcept {
+        m_device.destroySwapchainKHR(m_swapchain);
         m_device.destroy();
         m_instance.destroy();
+    }
+
+    void Renderer::createSwapChain(vk::Extent2D windowExtents) {
+        vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);
+
+        // TODO Decide on min image count
+        uint32_t minImageCount = surfaceCapabilities.minImageCount;
+
+        // TODO Decide on extents
+        vk::Extent2D swapchainExtents = windowExtents;
+
+        // The number of layers for each swapchain image: probably 1 unless the image is in stereoscopic 3D or something
+        uint32_t imageArrayLayers = 1;
+
+        // We only support rendering to texture for now
+        vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eTransferDst;
+
+        vk::SharingMode sharingMode = vk::SharingMode::eExclusive;
+        uint32_t sharingQueueCount = 0;
+        uint32_t possibleSharingQueues[] = {m_queues[QueueType::Present].familyIndex, m_queues[QueueType::Graphics].familyIndex};
+        uint32_t* sharingQueues = nullptr;
+        if (possibleSharingQueues[0] == possibleSharingQueues[1]) {
+            sharingQueues = possibleSharingQueues;
+            sharingQueueCount = 2;
+        }
+
+        // No special transform to apply to the surface
+        vk::SurfaceTransformFlagBitsKHR surfaceTransform = surfaceCapabilities.currentTransform;
+
+        vk::CompositeAlphaFlagBitsKHR alphaBlend = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+
+        // We want to clip the portions of the window that are drawn to exclude covered portions
+        vk::Bool32 clipMode = VK_TRUE;
+
+        vk::SwapchainCreateInfoKHR swapchainCreateInfo(vk::SwapchainCreateFlagsKHR(),
+                                                       m_surface,
+                                                       minImageCount,
+                                                       m_surfaceFormat.format,
+                                                       m_surfaceFormat.colorSpace,
+                                                       swapchainExtents,
+                                                       imageArrayLayers,
+                                                       imageUsageFlags,
+                                                       sharingMode,
+                                                       sharingQueueCount,
+                                                       sharingQueues,
+                                                       surfaceTransform,
+                                                       alphaBlend,
+                                                       m_presentMode,
+                                                       clipMode,
+                                                       m_swapchain);
+
+        m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
     }
 
 }

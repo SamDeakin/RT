@@ -1,6 +1,9 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vulkan/vulkan.hpp>
+
+#include <vector>
 
 namespace Core {
 
@@ -10,6 +13,12 @@ namespace Core {
         Compute,
         SparseBinding,
         Present,
+    };
+
+    struct QueueGroup {
+        QueueType type;
+        uint32_t familyIndex;
+        std::vector<vk::Queue> queues;
     };
 
 }

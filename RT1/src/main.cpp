@@ -49,7 +49,7 @@ main() {
                                                   DESIRED_DEVICE_EXTENSIONS,
                                                   features);
 
-    std::cout << "Waiting for keypress to exit..." << std::endl;
-    std::cin.ignore();
-    std::cin.get();
+//    std::cout << "Waiting for keypress to exit..." << std::endl;
+//    std::cin.ignore();
+//    std::cin.get();
 }

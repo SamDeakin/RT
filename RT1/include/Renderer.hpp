@@ -22,6 +22,14 @@ namespace Core {
 
         virtual ~Renderer() noexcept;
 
+        /**
+         * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.
+         * Useful for situations where previous swapchains have been invalidated.
+         * Must be called before rendering can begin for the first time.
+         * @param extents: The size of the window that the swapchain is rendering to.
+         */
+        void createSwapChain(vk::Extent2D windowExtents);
+
     protected:
         /// Vulkan instance configuration
         vk::Instance m_instance;
@@ -37,12 +45,13 @@ namespace Core {
 
         /// Vulkan logical device configuration
         vk::Device m_device;
-        std::unordered_map<QueueType, std::vector<vk::Queue>> m_queues;
+        std::unordered_map<QueueType, QueueGroup> m_queues;
 
         /// Vulkan surface configuration
         vk::SurfaceKHR m_surface;
         vk::SurfaceFormatKHR m_surfaceFormat;
         vk::PresentModeKHR m_presentMode;
+        vk::SwapchainKHR m_swapchain;
 
         // -- ctor helper functions --
 
