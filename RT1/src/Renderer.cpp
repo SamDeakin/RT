@@ -425,7 +425,7 @@ namespace Core {
         uint32_t minImageCount = surfaceCapabilities.minImageCount;
 
         // TODO Decide on extents
-        vk::Extent2D swapchainExtents = windowExtents;
+        m_swapchainExtents = windowExtents;
 
         // The number of layers for each swapchain image: probably 1 unless the image is in stereoscopic 3D or something
         uint32_t imageArrayLayers = 1;
@@ -455,7 +455,7 @@ namespace Core {
                                                        minImageCount,
                                                        m_surfaceFormat.format,
                                                        m_surfaceFormat.colorSpace,
-                                                       swapchainExtents,
+                                                       m_swapchainExtents,
                                                        imageArrayLayers,
                                                        imageUsageFlags,
                                                        sharingMode,
@@ -468,6 +468,7 @@ namespace Core {
                                                        m_swapchain);
 
         m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
+        m_swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
     }
 
 }

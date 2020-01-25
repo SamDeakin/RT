@@ -52,6 +52,8 @@ namespace Core {
         vk::SurfaceFormatKHR m_surfaceFormat;
         vk::PresentModeKHR m_presentMode;
         vk::SwapchainKHR m_swapchain;
+        vk::Extent2D m_swapchainExtents;
+        std::vector<vk::Image> m_swapchainImages;
 
         // -- ctor helper functions --
 
