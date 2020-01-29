@@ -1,4 +1,6 @@
 
+#include "RT1/RT1Window.hpp"
+
 #include <Core/Window.hpp>
 #include <Core/WindowedRenderer.hpp>
 
@@ -39,7 +41,7 @@ main() {
     // No features required
     vk::PhysicalDeviceFeatures features{};
 
-    Core::WindowedRenderer<Core::Window> renderer(glfwExtensionCount,
+    Core::WindowedRenderer<RT1::RT1Window> renderer(glfwExtensionCount,
                                                   glfwExtensions,
                                                   sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
                                                   DESIRED_INSTANCE_EXTENSIONS,
