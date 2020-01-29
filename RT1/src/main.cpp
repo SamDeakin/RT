@@ -1,6 +1,6 @@
 
-#include "Window.hpp"
-#include "WindowedRenderer.hpp"
+#include <Core/Window.hpp>
+#include <Core/WindowedRenderer.hpp>
 
 #include <GLFW/glfw3.h>
 #include <glm/vec4.hpp>

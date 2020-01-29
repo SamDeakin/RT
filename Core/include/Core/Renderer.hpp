@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderTypes.hpp"
+#include "Core/RenderTypes.hpp"
 
 #include <unordered_map>
 #include <vector>

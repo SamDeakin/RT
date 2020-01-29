@@ -19,5 +19,8 @@ find_package(glfw3 3.2 REQUIRED)
 add_compile_definitions(GLFW_INCLUDE_VULKAN)
 find_package(Vulkan REQUIRED)
 
-# Internal code here
+# Common Internal Code
+add_subdirectory(Core)
+
+# Individual Internal Projects
 add_subdirectory(RT1)
