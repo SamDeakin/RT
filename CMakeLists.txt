@@ -10,8 +10,9 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # Disable if it bugs you
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
-# For additional find modules
-# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+# Additional cmake scripts
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
 # External libraries are here
 # add_subdirectory(external)

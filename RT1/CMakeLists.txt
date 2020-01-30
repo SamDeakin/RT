@@ -3,6 +3,10 @@ set(NAME RT1)
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 file(GLOB SOURCES ${SOURCE_DIR}/*.cpp)
+
+add_shaders(SHADER_SOURCES)
+list(APPEND SOURCES ${SHADER_SOURCES})
+
 add_executable(${NAME} ${SOURCES})
 
 target_include_directories(${NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
