@@ -21,6 +21,6 @@ namespace Core {
         std::vector<vk::Queue> queues;
     };
 
-    using ShaderType = vk::PipelineShaderStageCreateFlagBits;
+    using ShaderType = vk::ShaderStageFlagBits;
 
 }
