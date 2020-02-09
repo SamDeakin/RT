@@ -13,6 +13,9 @@ namespace Core {
 
         /// Retrieve the info needed to use this shader in a pipeline
         vk::PipelineShaderStageCreateInfo getPipelineStageCreateInfo();
+
+        /// Retrieve the type
+        ShaderType getType();
     private:
         /// A hopefully descriptive name for the shader
         const std::string m_name;

@@ -23,6 +23,12 @@ namespace Core {
         virtual ~Renderer() noexcept;
 
         /**
+         * Get a device created for rendering
+         * @return The device
+         */
+        vk::Device& getDevice();
+
+        /**
          * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.
          * Useful for situations where previous swapchains have been invalidated.
          * Must be called before rendering can begin for the first time.

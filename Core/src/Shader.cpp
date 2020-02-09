@@ -1,5 +1,6 @@
 #include "Core/Shader.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -14,17 +15,19 @@ namespace Core {
             throw std::runtime_error("Can't load shader from file: " + filename);
         }
 
-        // TODO Funky endianness problems here
-        std::vector<std::byte> shaderBytes(file.tellg());
+        // This gets a bit funky because we have to load and specify length in bytes
+        // But we pass the final data as an array of uint32_t
+        std::size_t shaderByteLength = file.tellg();
+        std::vector<char> shaderData(shaderByteLength);
 
         file.seekg(0);
-        file.read(shaderBytes.data(), shaderBytes.size());
+        file.read(shaderData.data(), shaderByteLength);
         file.close();
 
         vk::ShaderModuleCreateInfo shaderModuleCreateInfo{
             vk::ShaderModuleCreateFlags(),
-            shaderBytes.size(),
-            static_cast<uint32_t*>(shaderBytes.data()),
+            shaderByteLength,
+            reinterpret_cast<uint32_t*>(shaderData.data()),
         };
 
         m_shaderModule = device.createShaderModule(shaderModuleCreateInfo);
@@ -41,4 +44,6 @@ namespace Core {
             nullptr,
         };
     }
+
+    ShaderType Shader::getType() { return m_type; }
 }

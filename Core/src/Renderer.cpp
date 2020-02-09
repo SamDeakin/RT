@@ -419,6 +419,8 @@ namespace Core {
         m_instance.destroy();
     }
 
+    vk::Device& Renderer::getDevice() { return m_device; }
+
     void Renderer::createSwapChain(vk::Extent2D windowExtents) {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);
 
