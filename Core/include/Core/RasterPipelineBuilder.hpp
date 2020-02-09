@@ -20,28 +20,27 @@ namespace Core {
         void setWindowSize(uint32_t width, uint32_t height);
 
         // TODO
-        //void setDepthStensilState();
+        // void setDepthStensilState();
 
         // TODO
-        //void setPipelineLayout();
+        // void setPipelineLayout();
 
         // TODO
-        //void setRenderPass();
+        // void setRenderPass();
 
         /// -- End members for configuration --
 
     protected:
-        void addFragmentShader(Shader& shader) override;
-
-        Shader* m_fragmentShader = nullptr;
-
         /// -- Sensible defaults for more generically configurable parts --
         /// These values are stored in this object for memory management
 
         vk::Viewport m_viewport{
-            0.0f, 0.0f,
-            0.0f, 0.0f, // Should be set before use with setWindowSize()
-            0.0f, 1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f, // Should be set before use with setWindowSize()
+            0.0f,
+            1.0f,
         };
         vk::Rect2D m_scissors{
             vk::Offset2D(0, 0),

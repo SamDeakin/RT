@@ -4,8 +4,6 @@ namespace Core {
     RasterPipelineBuilder::RasterPipelineBuilder() = default;
     RasterPipelineBuilder::~RasterPipelineBuilder() = default;
 
-    void RasterPipelineBuilder::addFragmentShader(Core::Shader& shader) { m_fragmentShader = &shader; }
-
     void RasterPipelineBuilder::getPipelineCreateInfo(vk::GraphicsPipelineCreateInfo& createInfo) {
         // Member from PipelineBuilder
         createInfo.flags = m_pipelineCreateFlags;

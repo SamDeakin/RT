@@ -18,7 +18,8 @@ namespace Core {
         /// -- Members for configuration --
 
         /**
-         * Add a shader to this pipeline
+         * Add a shader to this pipeline. Due to memory management reasons,
+         * This object should be destroyed before any shader added using this method.
          * @param shader: The shader to add
          */
         void addShader(Shader& shader);

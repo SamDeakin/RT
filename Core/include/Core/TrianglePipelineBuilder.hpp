@@ -2,6 +2,8 @@
 
 #include "Core/RasterPipelineBuilder.hpp"
 
+#include <vector>
+
 namespace Core {
     class TrianglePipelineBuilder : public RasterPipelineBuilder {
     public:
@@ -16,6 +18,7 @@ namespace Core {
 
     protected:
         void addVertexShader(Shader& shader) override;
+        void addFragmentShader(Shader& shader) override;
 
         vk::PipelineInputAssemblyStateCreateInfo m_inputAssemblyState{
             vk::PipelineInputAssemblyStateCreateFlags(),
@@ -23,7 +26,7 @@ namespace Core {
             VK_FALSE,
         };
 
-    private:
-        Shader* m_vertexShader = nullptr;
+        constexpr static const std::size_t s_shaderStageCount = 2;
+        std::vector<vk::PipelineShaderStageCreateInfo> m_shaderStageCreateInfos;
     };
 }
