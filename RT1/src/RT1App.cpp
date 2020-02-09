@@ -3,6 +3,12 @@
 #include <Core/Shader.hpp>
 #include <Core/TrianglePipelineBuilder.hpp>
 
+namespace {
+    struct Vertex {
+        float x, y, z, w;
+    };
+}
+
 namespace RT1 {
 
     RT1App::RT1App(Core::Renderer& renderer)
@@ -15,7 +21,20 @@ namespace RT1 {
         pipelineBuilder.addShader(vertShader);
         pipelineBuilder.addShader(fragShader);
 
-        // TODO Config more
+        vk::Extent2D windowSize = renderer.getSwapchainExtents();
+        pipelineBuilder.setWindowSize(windowSize.width, windowSize.height);
+
+        pipelineBuilder.addVertexInputBindingDesc(vk::VertexInputBindingDescription{
+            0,
+            sizeof(Vertex),
+            vk::VertexInputRate::eVertex,
+        });
+        pipelineBuilder.addVertexInputAttributeDesc(vk::VertexInputAttributeDescription{
+            0,
+            0,
+            vk::Format::eR32G32B32A32Sfloat,
+            0,
+        });
 
         vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineBuilder.getPipelineCreateInfo(pipelineCreateInfo);

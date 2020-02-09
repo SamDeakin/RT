@@ -14,6 +14,22 @@ namespace Core {
 
         /// -- Members for configuration --
 
+        /**
+         * Add a vertex binding description
+         * Note: This object should be destroyed before the added description
+         * The calling order matters for this method.
+         * @param bindingDescription: The description to add
+         */
+        void addVertexInputBindingDesc(const vk::VertexInputBindingDescription& bindingDescription);
+
+        /**
+         * Add a vertex attribute description
+         * Note: This object should be destroyed before the added description
+         * The calling order matters for this method.
+         * @param attributeDescription: The description to add
+         */
+        void addVertexInputAttributeDesc(const vk::VertexInputAttributeDescription& attributeDescription);
+
         /// -- End members for configuration --
 
     protected:
@@ -25,6 +41,10 @@ namespace Core {
             vk::PrimitiveTopology::eTriangleList,
             VK_FALSE,
         };
+
+        std::vector<vk::VertexInputBindingDescription> m_vertexBindingDescriptions;
+        std::vector<vk::VertexInputAttributeDescription> m_vertexAttributeDescriptions;
+        vk::PipelineVertexInputStateCreateInfo m_vertexInputStateCreateInfo; // The default is zeroed out
 
         constexpr static const std::size_t s_shaderStageCount = 2;
         std::vector<vk::PipelineShaderStageCreateInfo> m_shaderStageCreateInfos;
