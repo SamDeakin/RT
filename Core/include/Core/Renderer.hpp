@@ -34,7 +34,7 @@ namespace Core {
          * Get the current window size of the swapchain
          * @return The extents of the swapchain
          */
-        const vk::Extent2D& getSwapchainExtents();
+        const vk::Extent2D& getSwapchainExtents() const;
 
         /**
          * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.

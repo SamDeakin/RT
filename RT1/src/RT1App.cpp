@@ -7,18 +7,31 @@ namespace {
     struct Vertex {
         float x, y, z, w;
     };
+
+    Vertex screenSpaceTriangle[] = {
+        {-1, 1, 0.5, 1.0},
+        {0, -1, 0.5, 1.0},
+        {1, 1, 0.5, 1.0},
+    };
 }
 
 namespace RT1 {
 
     RT1App::RT1App(Core::Renderer& renderer)
         : m_renderer(renderer)
-        , m_device(renderer.getDevice()){
-        Core::Shader vertShader("Resources/Shaders/trivial.vert.spv", Core::ShaderType::eVertex, renderer.getDevice());
-        Core::Shader fragShader("Resources/Shaders/xyzToRgb.frag.spv", Core::ShaderType::eFragment, renderer.getDevice());
+        , m_device(renderer.getDevice()) {
 
+        // Create a pipeline layout
+        m_emptyDescriptorSetLayout = std::make_unique<Core::DescriptorSetLayout>(m_device, 0, nullptr);
+        m_emptyPipelineLayout = std::make_unique<Core::PipelineLayout>(m_device, 1, &m_emptyDescriptorSetLayout->getHandle(), 0, nullptr);
+
+        // Create a pipeline
         Core::TrianglePipelineBuilder pipelineBuilder;
+        pipelineBuilder.setPipelineLayout(*m_emptyPipelineLayout);
+
+        Core::Shader vertShader("Resources/Shaders/trivial.vert.spv", Core::ShaderType::eVertex, renderer.getDevice());
         pipelineBuilder.addShader(vertShader);
+        Core::Shader fragShader("Resources/Shaders/xyzToRgb.frag.spv", Core::ShaderType::eFragment, renderer.getDevice());
         pipelineBuilder.addShader(fragShader);
 
         vk::Extent2D windowSize = renderer.getSwapchainExtents();

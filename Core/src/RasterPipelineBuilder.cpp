@@ -24,7 +24,9 @@ namespace Core {
         createInfo.pMultisampleState = &m_multisampleState;
         createInfo.pDynamicState = &m_dynamicState;
 
-        // TODO Pipeline layout
+        // Previously created object handles that cannot be merged with another
+        createInfo.layout = m_pipelineLayout;
+
         // TODO Colour blend states
         // TODO Renderpasses
         // TODO subpass
@@ -38,5 +40,9 @@ namespace Core {
         m_viewport.width = width;
         m_viewport.height = height;
         m_scissors.extent = vk::Extent2D(width, height);
+    }
+
+    void RasterPipelineBuilder::setPipelineLayout(const PipelineLayout& layout) {
+        m_pipelineLayout = layout.getHandle();
     }
 }

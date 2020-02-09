@@ -1,6 +1,8 @@
 #pragma once
 
+#include <Core/DescriptorSetLayout.hpp>
 #include <Core/GraphicsPipeline.hpp>
+#include <Core/PipelineLayout.hpp>
 #include <Core/RenderTypes.hpp>
 #include <Core/Renderer.hpp>
 
@@ -26,6 +28,8 @@ namespace RT1 {
         Core::Renderer& m_renderer;
         vk::Device& m_device;
 
+        std::unique_ptr<Core::DescriptorSetLayout> m_emptyDescriptorSetLayout;
+        std::unique_ptr<Core::PipelineLayout> m_emptyPipelineLayout;
         std::unique_ptr<Core::GraphicsPipeline> m_simpleTrianglePipeline;
     };
 }

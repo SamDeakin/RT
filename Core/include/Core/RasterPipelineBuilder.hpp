@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/PipelineBuilder.hpp"
+#include "Core/PipelineLayout.hpp"
 
 namespace Core {
     class RasterPipelineBuilder : public PipelineBuilder {
@@ -22,8 +23,12 @@ namespace Core {
         // TODO
         // void setDepthStensilState();
 
-        // TODO
-        // void setPipelineLayout();
+        /**
+         * Add the pipeline layout for this pipeline.
+         * Note one must be added for creation to succeed.
+         * @param layout: A previously created pipeline layout
+         */
+        void setPipelineLayout(const PipelineLayout& layout);
 
         // TODO
         // void setRenderPass();
@@ -97,5 +102,8 @@ namespace Core {
         };
 
         /// -- End stored create info default structures --
+
+        /// Note this default value is invalid for pipeline creation.
+        vk::PipelineLayout m_pipelineLayout = vk::PipelineLayout();
     };
 }

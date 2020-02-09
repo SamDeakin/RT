@@ -421,7 +421,7 @@ namespace Core {
 
     vk::Device& Renderer::getDevice() { return m_device; }
 
-    const vk::Extent2D& Renderer::getSwapchainExtents() { return m_swapchainExtents; }
+    const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
 
     void Renderer::createSwapChain(vk::Extent2D windowExtents) {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);
