@@ -16,6 +16,7 @@ namespace Core {
 
         /// Retrieve the type
         ShaderType getType();
+
     private:
         /// A hopefully descriptive name for the shader
         const std::string m_name;

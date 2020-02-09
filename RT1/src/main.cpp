@@ -1,4 +1,5 @@
 
+#include "RT1/RT1App.hpp"
 #include "RT1/RT1Window.hpp"
 
 #include <Core/Window.hpp>
@@ -50,6 +51,8 @@ main() {
                                                   sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
                                                   DESIRED_DEVICE_EXTENSIONS,
                                                   features);
+
+    RT1::RT1App mainApp(renderer);
 
 //    std::cout << "Waiting for keypress to exit..." << std::endl;
 //    std::cin.ignore();

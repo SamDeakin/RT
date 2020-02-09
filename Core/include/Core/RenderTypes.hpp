@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 
+#include <chrono>
 #include <vector>
 
 namespace Core {
@@ -23,4 +24,6 @@ namespace Core {
 
     using ShaderType = vk::ShaderStageFlagBits;
 
+    using TimePoint = std::chrono::high_resolution_clock::time_point;
+    using TimeDelta = std::chrono::duration<double>;
 }
