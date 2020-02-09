@@ -1,9 +1,13 @@
 #pragma once
 
+#include <Core/GraphicsPipeline.hpp>
 #include <Core/RenderTypes.hpp>
 #include <Core/Renderer.hpp>
 
+#include <vulkan/vulkan.hpp>
+
 #include <chrono>
+#include <memory>
 
 namespace RT1 {
     class RT1App {
@@ -20,5 +24,8 @@ namespace RT1 {
 
     private:
         Core::Renderer& m_renderer;
+        vk::Device& m_device;
+
+        std::unique_ptr<Core::GraphicsPipeline> m_simpleTrianglePipeline;
     };
 }

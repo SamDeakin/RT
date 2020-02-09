@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Core/GraphicsPipeline.hpp"
 #include "Core/RenderTypes.hpp"
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.hpp>
@@ -35,6 +37,14 @@ namespace Core {
          * @param extents: The size of the window that the swapchain is rendering to.
          */
         void createSwapChain(vk::Extent2D windowExtents);
+
+        /**
+         * A helper to create many pipeline objects in a single call
+         * @param count: The number of pipelines to create
+         * @param createInfos: A pointer to the contiguous array of createInfos
+         * @return The created pipelines, where the caller is responsible for memory management
+         */
+        std::vector<std::unique_ptr<GraphicsPipeline>> createGraphicsPipelines(uint32_t count, const vk::GraphicsPipelineCreateInfo* createInfos);
 
     protected:
         /// Vulkan instance configuration

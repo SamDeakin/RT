@@ -516,5 +516,18 @@ namespace Core {
             m_swapchainImageViews.emplace_back(m_device.createImageView(viewCreateInfo));
         }
     }
+    std::vector<std::unique_ptr<GraphicsPipeline>> Renderer::createGraphicsPipelines(uint32_t count, const vk::GraphicsPipelineCreateInfo* createInfos) {
+        vk::ArrayProxy<const vk::GraphicsPipelineCreateInfo> createInfoArray(count, createInfos);
+        std::vector<vk::Pipeline> createdPipelines = m_device.createGraphicsPipelines(vk::PipelineCache(), createInfoArray);
+
+        std::vector<std::unique_ptr<GraphicsPipeline>> pipelineObjects;
+        pipelineObjects.reserve(createdPipelines.size());
+
+        for (vk::Pipeline& nativePipeline : createdPipelines) {
+            pipelineObjects.push_back(std::make_unique<GraphicsPipeline>(m_device, nativePipeline));
+        }
+
+        return pipelineObjects;
+    }
 
 }
