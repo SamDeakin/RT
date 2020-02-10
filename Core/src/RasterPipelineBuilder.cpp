@@ -23,13 +23,13 @@ namespace Core {
         createInfo.pRasterizationState = &m_rasterizationState;
         createInfo.pMultisampleState = &m_multisampleState;
         createInfo.pDynamicState = &m_dynamicState;
+        createInfo.pColorBlendState = &m_colourBlendState;
 
-        // Previously created object handles that cannot be merged with another
+            // Previously created object handles that cannot be merged with another
         createInfo.layout = m_pipelineLayout;
 
-        // TODO Colour blend states
-        // TODO Renderpasses
-        // TODO subpass
+        createInfo.renderPass = m_renderPass;
+        createInfo.subpass = m_subpass;
 
         // Members from PipelineBuilder
         createInfo.basePipelineHandle = m_basePipeline;
@@ -44,5 +44,29 @@ namespace Core {
 
     void RasterPipelineBuilder::setPipelineLayout(const PipelineLayout& layout) {
         m_pipelineLayout = layout.getHandle();
+    }
+
+    void RasterPipelineBuilder::setRenderPass(const RenderPass& renderPass, uint32_t subpass) {
+        m_renderPass = renderPass.getHandle();
+        m_subpass = subpass;
+    }
+
+    void RasterPipelineBuilder::addColourAttachmentBlendState(const vk::PipelineColorBlendAttachmentState &state) {
+        m_colourBlendStates.push_back(state);
+        m_colourBlendState.attachmentCount = m_colourBlendStates.size();
+        m_colourBlendState.pAttachments = m_colourBlendStates.data();
+    }
+
+    void RasterPipelineBuilder::addColourAttachmentBlendState() {
+        addColourAttachmentBlendState(vk::PipelineColorBlendAttachmentState{
+            VK_FALSE,
+            vk::BlendFactor::eOne,
+            vk::BlendFactor::eZero,
+            vk::BlendOp::eAdd,
+            vk::BlendFactor::eOne,
+            vk::BlendFactor::eZero,
+            vk::BlendOp::eAdd,
+            vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
+        });
     }
 }

@@ -423,6 +423,8 @@ namespace Core {
 
     const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
 
+    const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
+
     void Renderer::createSwapChain(vk::Extent2D windowExtents) {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);
 

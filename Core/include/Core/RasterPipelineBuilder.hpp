@@ -2,6 +2,7 @@
 
 #include "Core/PipelineBuilder.hpp"
 #include "Core/PipelineLayout.hpp"
+#include "Core/RenderPass.hpp"
 
 namespace Core {
     class RasterPipelineBuilder : public PipelineBuilder {
@@ -30,8 +31,26 @@ namespace Core {
          */
         void setPipelineLayout(const PipelineLayout& layout);
 
-        // TODO
-        // void setRenderPass();
+        /**
+         * Add the RenderPass for this pipeline.
+         * Note one must be added for creation to succeed.
+         * @param renderPass: A previously created RenderPass
+         * @param subpass: The subpass of this pipeline within renderPass
+         */
+        void setRenderPass(const RenderPass& renderPass, uint32_t subpass);
+
+        /**
+         * Add the blend state for the next colour attachment.
+         * This must be called in order for each colour attachment that will be
+         * included in the framebuffer
+         * @param blendState: The blend state for the next colour attachment
+         */
+        void addColourAttachmentBlendState(const vk::PipelineColorBlendAttachmentState& state);
+
+        /**
+         * Add a default blend state that effectively replaces the previous.
+         */
+        void addColourAttachmentBlendState();
 
         /// -- End members for configuration --
 
@@ -90,6 +109,15 @@ namespace Core {
             VK_FALSE,
         };
 
+        vk::PipelineColorBlendStateCreateInfo m_colourBlendState{
+            vk::PipelineColorBlendStateCreateFlags(),
+            VK_FALSE,
+            vk::LogicOp::eCopy,
+            0,
+            nullptr,
+            {0, 0, 0, 0},
+        };
+
         constexpr static const vk::DynamicState s_defaultDynamicStates[] = {
             vk::DynamicState::eViewport,
             vk::DynamicState::eLineWidth,
@@ -103,7 +131,12 @@ namespace Core {
 
         /// -- End stored create info default structures --
 
-        /// Note this default value is invalid for pipeline creation.
+        /// A list of colour attachment blend states, specific to this subpass
+        std::vector<vk::PipelineColorBlendAttachmentState> m_colourBlendStates;
+
+        /// Note these default values are invalid for pipeline creation.
         vk::PipelineLayout m_pipelineLayout = vk::PipelineLayout();
+        vk::RenderPass m_renderPass = vk::RenderPass();
+        uint32_t m_subpass = 0;
     };
 }

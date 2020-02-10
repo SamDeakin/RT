@@ -37,6 +37,12 @@ namespace Core {
         const vk::Extent2D& getSwapchainExtents() const;
 
         /**
+         * Get the output format used in the swapchain
+         * @return The format used to construct the swapchain
+         */
+        const vk::Format& getOutputFormat() const;
+
+        /**
          * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.
          * Useful for situations where previous swapchains have been invalidated.
          * Must be called before rendering can begin for the first time.
