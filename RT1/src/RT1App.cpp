@@ -18,12 +18,19 @@ namespace {
 
 namespace RT1 {
 
-    RT1App::RT1App(Core::Renderer& renderer)
-        : m_renderer(renderer)
+    RT1App::RT1App(Core::Renderer& renderer, Core::App::Parameters& parameters)
+        : Core::App(renderer, parameters)
+        , m_runtimeParameters(parameters)
+        , m_renderer(renderer)
         , m_device(renderer.getDevice()) {
         initRenderPass();
         initPipeline();
+
+        vk::Extent2D windowSize = m_renderer.getSwapchainExtents();
+        createSwapchainResources(windowSize.width, windowSize.height);
     }
+
+    RT1App::~RT1App() noexcept = default;
 
     void RT1App::initRenderPass() {
         Core::RenderPassBuilder builder;
@@ -104,7 +111,19 @@ namespace RT1 {
         m_simpleTrianglePipeline = std::move(createdPipelines[0]);
     }
 
-    RT1App::~RT1App() = default;
+    void RT1App::createSwapchainResources(int width, int height) {
+        // In general we only recreate resources that directly depend on the swapchain itself or the viewport size.
+        // For full correctness, we would recreate based on the image format as well, but we only support one format
+        // at time of writing and do not expect it to change during runtime.
+    }
+
+    void RT1App::destroySwapchainResources() {}
+
+    void RT1App::regenerateSwapchainResources(vk::Extent2D viewport) {
+        destroySwapchainResources();
+        m_renderer.recreateSwapChain(viewport);
+        createSwapchainResources(viewport.width, viewport.height);
+    }
 
     void RT1App::renderFrame(Core::TimePoint now, Core::TimeDelta delta) {}
 }

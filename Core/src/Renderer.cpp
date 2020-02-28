@@ -425,7 +425,7 @@ namespace Core {
 
     const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
 
-    void Renderer::createSwapChain(vk::Extent2D windowExtents) {
+    void Renderer::recreateSwapChain(vk::Extent2D windowExtents) {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);
 
         // TODO Decide on min image count

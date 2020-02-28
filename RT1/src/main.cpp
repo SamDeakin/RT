@@ -1,6 +1,5 @@
 
 #include "RT1/RT1App.hpp"
-#include "RT1/RT1Window.hpp"
 
 #include <Core/Window.hpp>
 #include <Core/WindowedRenderer.hpp>
@@ -42,19 +41,23 @@ main() {
     // No features required
     vk::PhysicalDeviceFeatures features{};
 
-    Core::WindowedRenderer<RT1::RT1Window> renderer(glfwExtensionCount,
-                                                  glfwExtensions,
-                                                  sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
-                                                  DESIRED_INSTANCE_EXTENSIONS,
-                                                  sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS)),
-                                                  DESIRED_INSTANCE_LAYERS,
-                                                  sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
-                                                  DESIRED_DEVICE_EXTENSIONS,
-                                                  features);
+    Core::App::Parameters parameters{
+        .width = 1920,
+        .height = 1080,
+    };
 
-    RT1::RT1App mainApp(renderer);
+    Core::WindowedRenderer<Core::Window, RT1::RT1App> renderer(glfwExtensionCount,
+                                                               glfwExtensions,
+                                                               sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
+                                                               DESIRED_INSTANCE_EXTENSIONS,
+                                                               sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS)),
+                                                               DESIRED_INSTANCE_LAYERS,
+                                                               sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
+                                                               DESIRED_DEVICE_EXTENSIONS,
+                                                               features,
+                                                               parameters);
 
-//    std::cout << "Waiting for keypress to exit..." << std::endl;
-//    std::cin.ignore();
-//    std::cin.get();
+    //    std::cout << "Waiting for keypress to exit..." << std::endl;
+    //    std::cin.ignore();
+    //    std::cin.get();
 }

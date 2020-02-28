@@ -2,11 +2,13 @@
 #include <iostream>
 namespace Core {
 
-    Window::Window(Renderer& renderer, int width, int height)
-        : m_renderer(renderer) {
+    Window::Window(int width, int height)
+        : m_minimized(false) {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         m_nativeWindow = glfwCreateWindow(width, height, "RT", nullptr, nullptr);
         fixTopBar(width, height);
+
+        registerCallbacks();
     }
 
     Window::~Window() noexcept { glfwDestroyWindow(m_nativeWindow); }
@@ -41,5 +43,33 @@ namespace Core {
 
         // If that didn't work then just go back to setting the requested size
         glfwSetWindowSize(m_nativeWindow, requestedWidth, requestedHeight);
+    }
+
+    void Window::registerCallbacks() {
+        // In order to re-find this class after, we use the glfw user-pointer feature
+        glfwSetWindowUserPointer(m_nativeWindow, this);
+
+        glfwSetFramebufferSizeCallback(m_nativeWindow, [](GLFWwindow* window, int width, int height) {
+            Window* userptr = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+            userptr->windowResized(width, height);
+        });
+    }
+
+    void Window::setApp(App *app) {
+        m_mainApp.reset(app);
+    }
+
+    bool Window::windowResized(int width, int height) {
+        if (width == 0 && height == 0) {
+            m_minimized = true;
+        } else {
+            m_minimized = false;
+            vk::Extent2D extents(width, height);
+            m_mainApp->regenerateSwapchainResources(extents);
+        }
+
+        m_mainApp->windowResized(width, height);
+
+        return true;
     }
 }

@@ -48,7 +48,7 @@ namespace Core {
          * Must be called before rendering can begin for the first time.
          * @param extents: The size of the window that the swapchain is rendering to.
          */
-        void createSwapChain(vk::Extent2D windowExtents);
+        void recreateSwapChain(vk::Extent2D windowExtents);
 
         /**
          * A helper to create many pipeline objects in a single call
