@@ -57,7 +57,5 @@ main() {
                                                                features,
                                                                parameters);
 
-    //    std::cout << "Waiting for keypress to exit..." << std::endl;
-    //    std::cin.ignore();
-    //    std::cin.get();
+    renderer.run();
 }

@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
-//#include <concepts>
 #include <memory>
 
 namespace Core {
@@ -44,6 +43,11 @@ namespace Core {
 
         ~WindowedRenderer() override;
 
+        /**
+         * Begin to run the application
+         */
+        void run();
+
     private:
         /// Window and display configuration
         std::unique_ptr<W> m_window;
@@ -53,6 +57,9 @@ namespace Core {
 
         /// Initialize the window surface
         void initSurface();
+
+        /// Initialize the swapchain, images, and views
+        void initSwapchain();
 
         /// Initialize the application
         void initApp(P& runtimeParameters);
@@ -74,6 +81,7 @@ namespace Core {
         initSurface();
         initPhysicalDevice(deviceExtensionCount, deviceExtensions, features);
         initLogicalDevice();
+        initSwapchain();
         initApp(runtimeParameters);
     }
 
@@ -84,7 +92,7 @@ namespace Core {
 
     template<class W, class A, class P>
     void WindowedRenderer<W, A, P>::initWindow(int width, int height) {
-        m_window = std::make_unique<W>(width, height);
+        m_window = std::make_unique<W>(*this, width, height);
     }
 
     template<class W, class A, class P>
@@ -101,8 +109,19 @@ namespace Core {
     }
 
     template<class W, class A, class P>
+    void WindowedRenderer<W, A, P>::initSwapchain() {
+        recreateSwapChain(m_window->getViewportExtents());
+    }
+
+    template<class W, class A, class P>
     void WindowedRenderer<W, A, P>::initApp(P& runtimeParameters) {
         A* app = new A(*this, runtimeParameters);
         m_window->setApp(app);
+    }
+
+    template<class W, class A, class P>
+    void WindowedRenderer<W, A, P>::run() {
+        m_window->run();
+        m_device.waitIdle(); // Wait for the device to finish before we try cleaning things up
     }
 }

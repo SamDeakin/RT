@@ -126,4 +126,5 @@ namespace RT1 {
     }
 
     void RT1App::renderFrame(Core::TimePoint now, Core::TimeDelta delta) {}
+    void RT1App::simulateFrame(Core::TimePoint now, Core::TimeDelta delta) {}
 }

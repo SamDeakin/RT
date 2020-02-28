@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Core/InputReceiver.hpp>
-#include <Core/Renderer.hpp>
 #include <Core/RenderTypes.hpp>
+#include <Core/Renderer.hpp>
 
 namespace Core {
     class App : public InputReceiver {
@@ -22,6 +22,13 @@ namespace Core {
          * @param delta: The time since the last render frame
          */
         virtual void renderFrame(Core::TimePoint now, Core::TimeDelta delta) = 0;
+
+        /**
+         * Perform a simulation frame
+         * @param now: The high-resolution time right now
+         * @param delta: The time since the last render frame
+         */
+        virtual void simulateFrame(Core::TimePoint now, Core::TimeDelta delta) = 0;
 
         /**
          * Regenerate vulkan objects that change when the swapchain must be recreated

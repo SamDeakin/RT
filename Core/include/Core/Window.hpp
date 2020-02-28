@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Core/App.hpp>
-#include <Core/Renderer.hpp>
 #include <Core/RenderTypes.hpp>
+#include <Core/Renderer.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -10,10 +10,10 @@
 
 namespace Core {
 
-    class Window : public InputReceiver {
+    class Window : protected InputReceiver {
     public:
-        explicit Window(int width, int height);
-        virtual ~Window() noexcept;
+        explicit Window(Renderer& renderer, int width, int height);
+        ~Window() noexcept override;
 
         GLFWwindow* getNativeWindow();
 
@@ -23,10 +23,23 @@ namespace Core {
          */
         void setApp(App* app);
 
+        /**
+         * Get the size of the viewport currently
+         * @return The size as received from the window api
+         */
+        vk::Extent2D getViewportExtents();
+
+        /**
+         * A simple single-threaded run-loop
+         */
+        virtual void run();
+
+        /// Event handling overrides, only visible to subclasses
         bool windowResized(int width, int height) override;
 
     private:
         GLFWwindow* m_nativeWindow;
+        Renderer& m_renderer;
 
         /// A helper for the ctor: corrects the window height to be the requested height.
         /// Useful for cases where the native height differs slightly due to the top bar or other.

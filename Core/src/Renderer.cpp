@@ -414,7 +414,6 @@ namespace Core {
 
     Renderer::~Renderer() noexcept {
         cleanupOldSwapchain();
-        m_device.destroySwapchainKHR(m_swapchain);
         m_device.destroy();
         m_instance.destroy();
     }
@@ -476,11 +475,13 @@ namespace Core {
                                                        clipMode,
                                                        m_swapchain};
 
+        vk::SwapchainKHR newSwapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
         cleanupOldSwapchain();
-        m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
+        m_swapchain = newSwapchain;
         initializeNewSwapchain();
     }
     void Renderer::cleanupOldSwapchain() {
+        m_device.destroySwapchainKHR(m_swapchain);
         m_swapchainImages.clear();
 
         for (auto& imageView : m_swapchainImageViews) {

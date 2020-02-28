@@ -24,6 +24,13 @@ namespace RT1 {
         void renderFrame(Core::TimePoint now, Core::TimeDelta delta) final;
 
         /**
+         * Perform a simulation frame
+         * @param now: The high-resolution time right now
+         * @param delta: The time since the last render frame
+         */
+        void simulateFrame(Core::TimePoint now, Core::TimeDelta delta) final;
+
+        /**
          * Regenerate vulkan objects that change when the swapchain must be recreated
          * @param viewport: The new viewport extents
          */
