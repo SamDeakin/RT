@@ -82,7 +82,23 @@ namespace Core {
         vk::SwapchainKHR m_swapchain;
         vk::Extent2D m_swapchainExtents;
         std::vector<vk::Image> m_swapchainImages;
-        std::vector<vk::ImageView> m_swapchainImageViews;
+        vk::ImageCopy m_swapchainImageCopyRegion{
+            vk::ImageSubresourceLayers{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                0,
+                1,
+            },
+            vk::Offset3D(0, 0, 0),
+            vk::ImageSubresourceLayers{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                0,
+                1,
+            },
+            vk::Offset3D(0, 0, 0),
+            vk::Extent3D(m_swapchainExtents, 1), // This extent member is the only one expected to be modifie
+        };
 
         // -- ctor helper functions --
 

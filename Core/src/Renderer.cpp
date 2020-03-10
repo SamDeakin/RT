@@ -483,43 +483,15 @@ namespace Core {
     void Renderer::cleanupOldSwapchain() {
         m_device.destroySwapchainKHR(m_swapchain);
         m_swapchainImages.clear();
-
-        for (auto& imageView : m_swapchainImageViews) {
-            m_device.destroyImageView(imageView);
-        }
-        m_swapchainImageViews.clear();
     }
     void Renderer::initializeNewSwapchain() {
         m_swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
 
-        // Our textures are bgra but we want rgba so we must swizzle
-        vk::ComponentMapping componentMapping{
-            vk::ComponentSwizzle::eB,
-            vk::ComponentSwizzle::eG,
-            vk::ComponentSwizzle::eR,
-            vk::ComponentSwizzle::eA,
-        };
-        vk::ImageSubresourceRange subresourceRange{
-            vk::ImageAspectFlagBits::eColor,
-            0,
-            1,
-            0,
-            1,
-        };
-
-        m_swapchainImageViews.reserve(m_swapchainImages.size());
-        for (auto& image : m_swapchainImages) {
-            vk::ImageViewCreateInfo viewCreateInfo{
-                vk::ImageViewCreateFlags(),
-                image,
-                vk::ImageViewType::e2D,
-                m_surfaceFormat.format,
-                componentMapping,
-                subresourceRange,
-            };
-
-            m_swapchainImageViews.emplace_back(m_device.createImageView(viewCreateInfo));
-        }
+        // Since we have chosen to implement copy-to-swapchain instead of render-to-swapchain, we do not create
+        // ImageViews for the Images.
+        // Instead we create the necessary copy-structures for later. This is rigid because we only support copying from
+        // a compatible image, and copying the entire image at once. We only update the extents.
+        m_swapchainImageCopyRegion.extent = vk::Extent3D(m_swapchainExtents, 1);
     }
     std::vector<std::unique_ptr<GraphicsPipeline>> Renderer::createGraphicsPipelines(uint32_t count, const vk::GraphicsPipelineCreateInfo* createInfos) {
         vk::ArrayProxy<const vk::GraphicsPipelineCreateInfo> createInfoArray(count, createInfos);
