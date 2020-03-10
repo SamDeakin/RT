@@ -30,7 +30,7 @@ namespace RT1 {
         createSwapchainResources(windowSize.width, windowSize.height);
     }
 
-    RT1App::~RT1App() noexcept = default;
+    RT1App::~RT1App() noexcept { destroySwapchainResources(); }
 
     void RT1App::initRenderPass() {
         Core::RenderPassBuilder builder;
@@ -114,10 +114,80 @@ namespace RT1 {
     void RT1App::createSwapchainResources(int width, int height) {
         // In general we only recreate resources that directly depend on the swapchain itself or the viewport size.
         // For full correctness, we would recreate based on the image format as well, but we only support one format
-        // at time of writing and do not expect it to change during runtime.
+        // at time of writing and do not expect it to change during runtime. This also matters less because we
+        // copy to the swapchain images so we only need a compatible copy src image.
+
+        std::size_t numSwapchainImages = m_renderer.getNumSwapchainImages();
+
+        vk::Format imageFormat = vk::Format::eB8G8R8A8Unorm;
+        vk::ImageCreateInfo framebufferImageInfo{
+            vk::ImageCreateFlags(),
+            vk::ImageType::e2D,
+            imageFormat,
+            vk::Extent3D(width, height, 1),
+            1,
+            1,
+            vk::SampleCountFlagBits::e1,
+            vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment,
+            vk::SharingMode::eExclusive,
+            0,
+            nullptr,                              // Ignored when sharing mode is not eConcurrent
+            vk::ImageLayout::eUndefined,
+        };
+
+        for (std::size_t i = 0; i < numSwapchainImages; i++) {
+            vk::Image image = m_device.createImage(framebufferImageInfo);
+            m_framebufferImages.push_back(image);
+
+            vk::ImageViewCreateInfo imageViewCreateInfo{
+                vk::ImageViewCreateFlags(),
+                image,
+                vk::ImageViewType::e2D,
+                imageFormat,
+                vk::ComponentMapping(), // TODO does R map to "R" or the first component of the BGRA texture?
+                vk::ImageSubresourceRange{
+                    vk::ImageAspectFlagBits::eColor,
+                    0,
+                    1,
+                    0,
+                    1,
+                },
+            };
+
+            // TODO Bind device memory or the next call crashes
+
+            vk::ImageView imageView = m_device.createImageView(imageViewCreateInfo);
+            m_framebufferImageViews.push_back(imageView);
+
+            vk::FramebufferCreateInfo framebufferCreateInfo{
+                vk::FramebufferCreateFlags(),
+                m_basicRenderPass->getHandle(),
+                1,
+                &imageView,
+                static_cast<uint32_t>(width),
+                static_cast<uint32_t>(height),
+                1,
+            };
+
+            vk::Framebuffer framebuffer = m_device.createFramebuffer(framebufferCreateInfo);
+            m_framebuffers.push_back(framebuffer);
+        }
     }
 
-    void RT1App::destroySwapchainResources() {}
+    void RT1App::destroySwapchainResources() {
+        for (vk::Framebuffer& framebuffer : m_framebuffers) {
+            m_device.destroyFramebuffer(framebuffer);
+        }
+
+        for (vk::ImageView& imageView : m_framebufferImageViews) {
+            m_device.destroyImageView(imageView);
+        }
+
+        for (vk::Image& image : m_framebufferImages) {
+            m_device.destroyImage(image);
+        }
+    }
 
     void RT1App::regenerateSwapchainResources(vk::Extent2D viewport) {
         destroySwapchainResources();

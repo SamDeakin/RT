@@ -47,6 +47,9 @@ namespace RT1 {
         std::unique_ptr<Core::GraphicsPipeline> m_simpleTrianglePipeline;
 
         /// Members recreated on swapchain recreation
+        std::vector<vk::Image> m_framebufferImages;
+        std::vector<vk::ImageView> m_framebufferImageViews;
+        std::vector<vk::Framebuffer> m_framebuffers;
 
         // -- Begin ctor helpers --
 

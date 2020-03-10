@@ -37,6 +37,18 @@ namespace Core {
         const vk::Extent2D& getSwapchainExtents() const;
 
         /**
+         * Get the images that were received from the current swapchain
+         * @return A non-mutable vector of the images.
+         */
+        const std::vector<vk::Image>& getSwapchainImages() const;
+
+        /**
+         * Get the number of swapchain images currently known to exist.
+         * @return In practice, the size of getSwapchainImages()
+         */
+        std::size_t getNumSwapchainImages() const;
+
+        /**
          * Get the output format used in the swapchain
          * @return The format used to construct the swapchain
          */

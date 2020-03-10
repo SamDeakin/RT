@@ -422,7 +422,8 @@ namespace Core {
     vk::Device& Renderer::getDevice() { return m_device; }
 
     const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
-
+    const std::vector<vk::Image>& Renderer::getSwapchainImages() const { return m_swapchainImages; }
+    std::size_t Renderer::getNumSwapchainImages() const { return m_swapchainImages.size(); }
     const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
 
     void Renderer::recreateSwapChain(vk::Extent2D windowExtents) {
