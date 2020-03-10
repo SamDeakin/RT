@@ -86,9 +86,7 @@ namespace Core {
     }
 
     template<class W, class A, class P>
-    WindowedRenderer<W, A, P>::~WindowedRenderer() {
-        m_instance.destroySurfaceKHR(m_surface);
-    }
+    WindowedRenderer<W, A, P>::~WindowedRenderer() {}
 
     template<class W, class A, class P>
     void WindowedRenderer<W, A, P>::initWindow(int width, int height) {

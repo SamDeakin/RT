@@ -414,6 +414,7 @@ namespace Core {
 
     Renderer::~Renderer() noexcept {
         cleanupOldSwapchain();
+        m_instance.destroySurfaceKHR(m_surface);
         m_device.destroy();
         m_instance.destroy();
     }
@@ -481,8 +482,8 @@ namespace Core {
         initializeNewSwapchain();
     }
     void Renderer::cleanupOldSwapchain() {
-        m_device.destroySwapchainKHR(m_swapchain);
         m_swapchainImages.clear();
+        m_device.destroySwapchainKHR(m_swapchain);
     }
     void Renderer::initializeNewSwapchain() {
         m_swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
