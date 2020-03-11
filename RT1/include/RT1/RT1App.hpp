@@ -5,6 +5,8 @@
 #include <Core/PipelineLayout.hpp>
 #include <Core/RenderPass.hpp>
 
+#include <vk_mem_alloc.hpp>
+
 namespace RT1 {
 
     class RT1App : public Core::App {
@@ -39,7 +41,8 @@ namespace RT1 {
     private:
         Core::App::Parameters& m_runtimeParameters;
         Core::Renderer& m_renderer;
-        vk::Device& m_device;
+        vk::Device m_device;
+        vma::Allocator m_allocator;
 
         std::unique_ptr<Core::RenderPass> m_basicRenderPass;
         std::unique_ptr<Core::DescriptorSetLayout> m_emptyDescriptorSetLayout;
@@ -47,9 +50,15 @@ namespace RT1 {
         std::unique_ptr<Core::GraphicsPipeline> m_simpleTrianglePipeline;
 
         /// Members recreated on swapchain recreation
-        std::vector<vk::Image> m_framebufferImages;
-        std::vector<vk::ImageView> m_framebufferImageViews;
-        std::vector<vk::Framebuffer> m_framebuffers;
+        struct FramebufferData{
+            vk::Image colourAttachment0Image;
+            vma::Allocation colourAttachment0ImageAllocation;
+            vk::ImageView colourAttachment0ImageView;
+
+            vk::Framebuffer framebuffer;
+        };
+
+        std::vector<FramebufferData> m_framebufferData;
 
         // -- Begin ctor helpers --
 

@@ -23,6 +23,13 @@ namespace RT1 {
         , m_runtimeParameters(parameters)
         , m_renderer(renderer)
         , m_device(renderer.getDevice()) {
+
+        vma::AllocatorCreateInfo allocatorInfo{};
+        allocatorInfo.physicalDevice = renderer.getPhysicalDevice();
+        allocatorInfo.device = m_device;
+        allocatorInfo.instance = renderer.getInstance();
+        vma::createAllocator(&allocatorInfo, &m_allocator);
+
         initRenderPass();
         initPipeline();
 
@@ -30,7 +37,10 @@ namespace RT1 {
         createSwapchainResources(windowSize.width, windowSize.height);
     }
 
-    RT1App::~RT1App() noexcept { destroySwapchainResources(); }
+    RT1App::~RT1App() noexcept {
+        destroySwapchainResources();
+        m_allocator.destroy();
+    }
 
     void RT1App::initRenderPass() {
         Core::RenderPassBuilder builder;
@@ -135,10 +145,11 @@ namespace RT1 {
             nullptr,                              // Ignored when sharing mode is not eConcurrent
             vk::ImageLayout::eUndefined,
         };
+        vma::AllocationCreateInfo imageAllocationInfo{};
+
 
         for (std::size_t i = 0; i < numSwapchainImages; i++) {
-            vk::Image image = m_device.createImage(framebufferImageInfo);
-            m_framebufferImages.push_back(image);
+            auto[image, allocation] = m_allocator.createImage(framebufferImageInfo, imageAllocationInfo);
 
             vk::ImageViewCreateInfo imageViewCreateInfo{
                 vk::ImageViewCreateFlags(),
@@ -155,10 +166,7 @@ namespace RT1 {
                 },
             };
 
-            // TODO Bind device memory or the next call crashes
-
             vk::ImageView imageView = m_device.createImageView(imageViewCreateInfo);
-            m_framebufferImageViews.push_back(imageView);
 
             vk::FramebufferCreateInfo framebufferCreateInfo{
                 vk::FramebufferCreateFlags(),
@@ -171,21 +179,20 @@ namespace RT1 {
             };
 
             vk::Framebuffer framebuffer = m_device.createFramebuffer(framebufferCreateInfo);
-            m_framebuffers.push_back(framebuffer);
+            m_framebufferData.push_back(FramebufferData{
+                image,
+                allocation,
+                imageView,
+                framebuffer,
+            });
         }
     }
 
     void RT1App::destroySwapchainResources() {
-        for (vk::Framebuffer& framebuffer : m_framebuffers) {
-            m_device.destroyFramebuffer(framebuffer);
-        }
-
-        for (vk::ImageView& imageView : m_framebufferImageViews) {
-            m_device.destroyImageView(imageView);
-        }
-
-        for (vk::Image& image : m_framebufferImages) {
-            m_device.destroyImage(image);
+        for (FramebufferData framebufferData : m_framebufferData) {
+            m_device.destroyFramebuffer(framebufferData.framebuffer);
+            m_device.destroyImageView(framebufferData.colourAttachment0ImageView);
+            m_allocator.destroyImage(framebufferData.colourAttachment0Image, framebufferData.colourAttachment0ImageAllocation);
         }
     }
 

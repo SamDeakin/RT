@@ -419,7 +419,9 @@ namespace Core {
         m_instance.destroy();
     }
 
-    vk::Device& Renderer::getDevice() { return m_device; }
+    vk::Device Renderer::getDevice() const { return m_device; }
+    vk::PhysicalDevice Renderer::getPhysicalDevice() const { return m_physicalDevice; }
+    vk::Instance Renderer::getInstance() const { return m_instance; }
 
     const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
     const std::vector<vk::Image>& Renderer::getSwapchainImages() const { return m_swapchainImages; }

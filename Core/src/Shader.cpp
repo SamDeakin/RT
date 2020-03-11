@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace Core {
-    Shader::Shader(const std::string& filename, Core::ShaderType type, vk::Device& device)
+    Shader::Shader(const std::string& filename, Core::ShaderType type, vk::Device device)
         : m_name(filename)
         , m_type(type)
         , m_device(device) {

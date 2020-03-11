@@ -8,7 +8,7 @@ namespace Core {
 
     class Shader {
     public:
-        Shader(const std::string& filename, ShaderType type, vk::Device& device);
+        Shader(const std::string& filename, ShaderType type, vk::Device device);
         ~Shader();
 
         /// Retrieve the info needed to use this shader in a pipeline
@@ -25,7 +25,7 @@ namespace Core {
         ShaderType m_type;
 
         /// A reference to the device, used for cleanup
-        vk::Device& m_device;
+        vk::Device m_device;
 
         /// The loaded shader
         vk::ShaderModule m_shaderModule;

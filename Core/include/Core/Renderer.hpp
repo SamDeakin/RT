@@ -28,7 +28,20 @@ namespace Core {
          * Get a device created for rendering
          * @return The device
          */
-        vk::Device& getDevice();
+        vk::Device getDevice() const;
+
+        /**
+         * Get a physical device to be used for memory allocation
+         * Currently there is only one physical device used.
+         * @return A physical device
+         */
+        vk::PhysicalDevice getPhysicalDevice() const;
+
+        /**
+         * Get the vulkan instance
+         * @return The vulkan instance
+         */
+        vk::Instance getInstance() const;
 
         /**
          * Get the current window size of the swapchain

@@ -19,6 +19,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 find_package(glfw3 3.2 REQUIRED)
 add_compile_definitions(GLFW_INCLUDE_VULKAN)
 find_package(Vulkan REQUIRED)
+find_package(Threads REQUIRED)
 add_subdirectory(VulkanMemoryAllocator)
 
 # Common Internal Code
