@@ -14,5 +14,6 @@ target_include_directories(${NAME} PRIVATE Vulkan::Vulkan)
 
 target_link_libraries(${NAME} glfw)
 target_link_libraries(${NAME} Vulkan::Vulkan)
+target_link_libraries(${NAME} VulkanMemoryAllocator)
 
 target_link_libraries(${NAME} Core)
