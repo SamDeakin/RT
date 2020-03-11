@@ -1034,10 +1034,19 @@ namespace VMA_HPP_NAMESPACE {
                          PFN_vkCreateImage vkCreateImage_ = nullptr,
                          PFN_vkDestroyImage vkDestroyImage_ = nullptr,
                          PFN_vkCmdCopyBuffer vkCmdCopyBuffer_ = nullptr
-#if VMA_DEDICATED_ALLOCATION
-            , PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR_ = nullptr,
+                         /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
+#if VMA_DEDICATED_ALLOCATION || VMA_VULKAN_VERSION >= 1001000
+                       , PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR_ = nullptr,
                          PFN_vkGetImageMemoryRequirements2KHR vkGetImageMemoryRequirements2KHR_ = nullptr
 #endif
+#if VMA_BIND_MEMORY2 || VMA_VULKAN_VERSION >= 1001000
+                       , PFN_vkBindBufferMemory2KHR vkBindBufferMemory2KHR_ = nullptr,
+                         PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR_ = nullptr
+#endif
+#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
+                       , PFN_vkGetPhysicalDeviceMemoryProperties2KHR vkGetPhysicalDeviceMemoryProperties2KHR_ = nullptr
+#endif
+                         /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
         )
             : vkGetPhysicalDeviceProperties( vkGetPhysicalDeviceProperties_ )
               , vkGetPhysicalDeviceMemoryProperties( vkGetPhysicalDeviceMemoryProperties_ )
@@ -1056,10 +1065,19 @@ namespace VMA_HPP_NAMESPACE {
               , vkCreateImage( vkCreateImage_ )
               , vkDestroyImage( vkDestroyImage_ )
               , vkCmdCopyBuffer( vkCmdCopyBuffer_ )
-#if VMA_DEDICATED_ALLOCATION
-            , vkGetBufferMemoryRequirements2KHR(vkGetBufferMemoryRequirements2KHR_)
-              , vkGetImageMemoryRequirements2KHR(vkGetImageMemoryRequirements2KHR_)
+              /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
+#if VMA_DEDICATED_ALLOCATION || VMA_VULKAN_VERSION >= 1001000
+              , vkGetBufferMemoryRequirements2KHR( vkGetBufferMemoryRequirements2KHR_ )
+              , vkGetImageMemoryRequirements2KHR( vkGetImageMemoryRequirements2KHR_ )
 #endif
+#if VMA_BIND_MEMORY2 || VMA_VULKAN_VERSION >= 1001000
+              , vkBindBufferMemory2KHR( vkBindBufferMemory2KHR_ )
+              , vkBindImageMemory2KHR( vkBindImageMemory2KHR_ )
+#endif
+#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
+              , vkGetPhysicalDeviceMemoryProperties2KHR( vkGetPhysicalDeviceMemoryProperties2KHR_ )
+#endif
+              /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
         {}
 
         VulkanFunctions( VmaVulkanFunctions const & rhs )
@@ -1175,7 +1193,8 @@ namespace VMA_HPP_NAMESPACE {
             return *this;
         }
 
-#if VMA_DEDICATED_ALLOCATION
+        /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
+#if VMA_DEDICATED_ALLOCATION || VMA_VULKAN_VERSION >= 1001000
         VulkanFunctions & setVkGetBufferMemoryRequirements2KHR( PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR_ )
         {
             vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR_;
@@ -1188,6 +1207,27 @@ namespace VMA_HPP_NAMESPACE {
             return *this;
         }
 #endif
+#if VMA_BIND_MEMORY2 || VMA_VULKAN_VERSION >= 1001000
+        VulkanFunctions & setVkBindBufferMemory2KHR( PFN_vkBindBufferMemory2KHR vkBindBufferMemory2KHR_ )
+        {
+            vkBindBufferMemory2KHR = vkBindBufferMemory2KHR_;
+            return *this;
+        }
+
+        VulkanFunctions & setVkBindImageMemory2KHR( PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR_ )
+        {
+            vkBindImageMemory2KHR = vkBindImageMemory2KHR_;
+            return *this;
+        }
+#endif
+#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
+        VulkanFunctions & setVkGetPhysicalDeviceMemoryProperties2KHR( PFN_vkGetPhysicalDeviceMemoryProperties2KHR vkGetPhysicalDeviceMemoryProperties2KHR_ )
+        {
+            vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR_;
+            return *this;
+        }
+#endif
+        /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
 
         operator VmaVulkanFunctions const&() const
         {
@@ -1218,10 +1258,19 @@ namespace VMA_HPP_NAMESPACE {
                    && ( vkCreateImage == rhs.vkCreateImage )
                    && ( vkDestroyImage == rhs.vkDestroyImage )
                    && ( vkCmdCopyBuffer == rhs.vkCmdCopyBuffer )
-                   #if VMA_DEDICATED_ALLOCATION
+                   /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
+#if VMA_DEDICATED_ALLOCATION || VMA_VULKAN_VERSION >= 1001000
                    && ( vkGetBufferMemoryRequirements2KHR == rhs.vkGetBufferMemoryRequirements2KHR )
                    && ( vkGetImageMemoryRequirements2KHR == rhs.vkGetImageMemoryRequirements2KHR )
 #endif
+#if VMA_BIND_MEMORY2 || VMA_VULKAN_VERSION >= 1001000
+                   && ( vkBindBufferMemory2KHR == rhs.vkBindBufferMemory2KHR )
+                   && ( vkBindImageMemory2KHR == rhs.vkBindImageMemory2KHR )
+#endif
+#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
+                   && ( vkGetPhysicalDeviceMemoryProperties2KHR == rhs.vkGetPhysicalDeviceMemoryProperties2KHR )
+#endif
+                   /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
                 ;
         }
 
@@ -1248,7 +1297,7 @@ namespace VMA_HPP_NAMESPACE {
         PFN_vkCreateImage vkCreateImage;
         PFN_vkDestroyImage vkDestroyImage;
         PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
-        /// DIVERGENCE -- vulkan 1.1
+        /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
 #if VMA_DEDICATED_ALLOCATION || VMA_VULKAN_VERSION >= 1001000
         PFN_vkGetBufferMemoryRequirements2KHR vkGetBufferMemoryRequirements2KHR;
         PFN_vkGetImageMemoryRequirements2KHR vkGetImageMemoryRequirements2KHR;
@@ -1260,7 +1309,7 @@ namespace VMA_HPP_NAMESPACE {
 #if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
         PFN_vkGetPhysicalDeviceMemoryProperties2KHR vkGetPhysicalDeviceMemoryProperties2KHR;
 #endif
-        /// END DIVERGENCE -- vulkan 1.1
+        /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
     };
     static_assert( sizeof( VulkanFunctions ) == sizeof( VmaVulkanFunctions ), "struct and wrapper have different size!" );
     static_assert( std::is_standard_layout<VulkanFunctions>::value, "struct wrapper is not a standard layout!" );
@@ -1464,7 +1513,11 @@ namespace VMA_HPP_NAMESPACE {
                    && ( frameInUseCount == rhs.frameInUseCount )
                    && ( pHeapSizeLimit == rhs.pHeapSizeLimit )
                    && ( pVulkanFunctions == rhs.pVulkanFunctions )
-                   && ( pRecordSettings == rhs.pRecordSettings );
+                   /// DIVERGENCE -- vulkan 1.1, vma 2.3.0
+                   && ( pRecordSettings == rhs.pRecordSettings )
+                   && ( instance == rhs.instance )
+                   && ( vulkanApiVersion == rhs.vulkanApiVersion );
+                   /// END DIVERGENCE -- vulkan 1.1, vma 2.3.0
         }
 
         bool operator!=( AllocatorCreateInfo const& rhs ) const
