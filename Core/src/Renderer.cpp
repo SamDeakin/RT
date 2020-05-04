@@ -254,10 +254,11 @@ namespace Core {
         uint32_t presentQueueCount = 0;
         uint32_t transferQueueCount = 0;
         uint32_t computeQueueCount = 0;
-        QueueGroup graphicsQueueGroup{.type = QueueType::Graphics};
-        QueueGroup presentQueueGroup{.type = QueueType::Present};
-        QueueGroup transferQueueGroup{.type = QueueType::Transfer};
-        QueueGroup computeQueueGroup{.type = QueueType::Compute};
+        QueueGroup graphicsQueueGroup{.primaryType = QueueType::Graphics};
+        QueueGroup presentQueueGroup{.primaryType = QueueType::Present};
+        QueueGroup transferQueueGroup{.primaryType = QueueType::Transfer};
+        QueueGroup computeQueueGroup{.primaryType = QueueType::Compute};
+        // TODO A fallback sparse binding queue (By default should use the next queue to use results)
 
         // The first queue with graphics is chosen for graphics
         // The first queue with transfer and not graphics is chosen for transfer, and the same for compute
@@ -268,6 +269,7 @@ namespace Core {
         for (uint32_t i = 0; i < m_deviceQueueFamilies.size(); i++) {
             if (!graphicsFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics) {
                 graphicsQueueGroup.familyIndex = i;
+                graphicsQueueGroup.supportedTypes = m_deviceQueueFamilies[i].queueFlags;
                 graphicsQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = graphicsQueueCount;
                 graphicsFound = true;
@@ -275,6 +277,7 @@ namespace Core {
             if (!transferFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eTransfer &&
                 !(m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics)) {
                 transferQueueGroup.familyIndex = i;
+                transferQueueGroup.supportedTypes = m_deviceQueueFamilies[i].queueFlags;
                 transferQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = transferQueueCount;
                 transferFound = true;
@@ -282,6 +285,7 @@ namespace Core {
             if (!computeFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eCompute &&
                 !(m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics)) {
                 computeQueueGroup.familyIndex = i;
+                computeQueueGroup.supportedTypes = m_deviceQueueFamilies[i].queueFlags;
                 computeQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = computeQueueCount;
                 computeFound = true;
@@ -291,6 +295,7 @@ namespace Core {
             // shared with the graphics queue
             if (!presentFound && m_physicalDevice.getSurfaceSupportKHR(i, m_surface)) {
                 presentQueueGroup.familyIndex = i;
+                presentQueueGroup.supportedTypes = m_deviceQueueFamilies[i].queueFlags;
                 presentQueueCount = DESIRED_PRESENT_QUEUES;
                 presentFound = true;
 

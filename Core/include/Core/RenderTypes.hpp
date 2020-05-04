@@ -17,7 +17,8 @@ namespace Core {
     };
 
     struct QueueGroup {
-        QueueType type;
+        QueueType primaryType;
+        vk::QueueFlags supportedTypes;
         uint32_t familyIndex;
         std::vector<vk::Queue> queues;
     };
