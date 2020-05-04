@@ -260,7 +260,7 @@ namespace Core {
         QueueGroup computeQueueGroup{.type = QueueType::Compute};
 
         // The first queue with graphics is chosen for graphics
-        // The first queue with only transfer is chosen for transfer, and the same for compute
+        // The first queue with transfer and not graphics is chosen for transfer, and the same for compute
         bool graphicsFound = false;
         bool presentFound = false;
         bool transferFound = false;
@@ -271,12 +271,16 @@ namespace Core {
                 graphicsQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = graphicsQueueCount;
                 graphicsFound = true;
-            } else if (!transferFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eTransfer) {
+            }
+            if (!transferFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eTransfer &&
+                !(m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics)) {
                 transferQueueGroup.familyIndex = i;
                 transferQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = transferQueueCount;
                 transferFound = true;
-            } else if (!computeFound && m_deviceQueueFamilies[i].queueFlags == vk::QueueFlagBits::eCompute) {
+            }
+            if (!computeFound && m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eCompute &&
+                !(m_deviceQueueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics)) {
                 computeQueueGroup.familyIndex = i;
                 computeQueueCount = m_deviceQueueFamilies[i].queueCount;
                 queuesDesiredPerFamily[i] = computeQueueCount;
