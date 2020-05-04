@@ -103,7 +103,7 @@ namespace VMA_HPP_NAMESPACE {
         }
     }
 
-    using AllocationCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocationCreateFlagBits, VmaAllocationCreateFlags>;
+    using AllocationCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocationCreateFlagBits>;
 
     VULKAN_HPP_INLINE AllocationCreateFlags operator|( AllocationCreateFlagBits bit0, AllocationCreateFlagBits bit1 )
     {
@@ -166,7 +166,7 @@ namespace VMA_HPP_NAMESPACE {
         }
     }
 
-    using AllocatorCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocatorCreateFlagBits, VmaAllocatorCreateFlags>;
+    using AllocatorCreateFlags = VULKAN_HPP_NAMESPACE::Flags<AllocatorCreateFlagBits>;
 
     VULKAN_HPP_INLINE AllocatorCreateFlags operator|( AllocatorCreateFlagBits bit0, AllocatorCreateFlagBits bit1 )
     {
@@ -196,7 +196,7 @@ namespace VMA_HPP_NAMESPACE {
         return "(void)";
     }
 
-    using DefragmentationFlags = VULKAN_HPP_NAMESPACE::Flags<DefragmentationFlagBits, VmaDefragmentationFlags>;
+    using DefragmentationFlags = VULKAN_HPP_NAMESPACE::Flags<DefragmentationFlagBits>;
 
     VULKAN_HPP_INLINE std::string to_string( DefragmentationFlags  )
     {
@@ -237,7 +237,7 @@ namespace VMA_HPP_NAMESPACE {
         }
     }
 
-    using PoolCreateFlags = VULKAN_HPP_NAMESPACE::Flags<PoolCreateFlagBits, VmaPoolCreateFlags>;
+    using PoolCreateFlags = VULKAN_HPP_NAMESPACE::Flags<PoolCreateFlagBits>;
 
     VULKAN_HPP_INLINE PoolCreateFlags operator|( PoolCreateFlagBits bit0, PoolCreateFlagBits bit1 )
     {
@@ -289,7 +289,7 @@ namespace VMA_HPP_NAMESPACE {
         }
     }
 
-    using RecordFlags = VULKAN_HPP_NAMESPACE::Flags<RecordFlagBits, VmaRecordFlags>;
+    using RecordFlags = VULKAN_HPP_NAMESPACE::Flags<RecordFlagBits>;
 
     VULKAN_HPP_INLINE RecordFlags operator|( RecordFlagBits bit0, RecordFlagBits bit1 )
     {
