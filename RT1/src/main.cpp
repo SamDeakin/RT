@@ -16,7 +16,7 @@ const char* DESIRED_INSTANCE_EXTENSIONS[] = {
 };
 
 const char* DESIRED_INSTANCE_LAYERS[] = {
-    "VK_LAYER_LUNARG_standard_validation", // This includes a standard set of other layers in an optimal order
+    "VK_LAYER_KHRONOS_validation", // This includes a standard set of other layers in an optimal order
 };
 
 const char* DESIRED_DEVICE_EXTENSIONS[] = {

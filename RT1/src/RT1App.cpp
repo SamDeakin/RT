@@ -194,6 +194,7 @@ namespace RT1 {
             m_device.destroyImageView(framebufferData.colourAttachment0ImageView);
             m_allocator.destroyImage(framebufferData.colourAttachment0Image, framebufferData.colourAttachment0ImageAllocation);
         }
+        m_framebufferData.clear();
     }
 
     void RT1App::regenerateSwapchainResources(vk::Extent2D viewport) {

@@ -24,8 +24,8 @@ namespace Core {
             "RT1",
             VK_MAKE_VERSION(1, 0, 0),
             "TestEngine",
-            VK_MAKE_VERSION(1, 0, 0),
-            VK_API_VERSION_1_1,
+            VK_MAKE_VERSION(1, 1, 0),
+            VK_API_VERSION_1_2,
         };
 
         std::vector<const char*> allExtensions;
