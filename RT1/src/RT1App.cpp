@@ -22,7 +22,10 @@ namespace RT1 {
         : Core::App(renderer, parameters)
         , m_runtimeParameters(parameters)
         , m_renderer(renderer)
-        , m_device(renderer.getDevice()) {
+        , m_device(renderer.getDevice())
+        , m_graphicsQueue(renderer.getQueue(Core::QueueType::Graphics))
+        , m_transferQueue(renderer.getQueue(Core::QueueType::Transfer))
+        , m_presentQueue(renderer.getQueue(Core::QueueType::Present)) {
 
         vma::AllocatorCreateInfo allocatorInfo{};
         allocatorInfo.physicalDevice = renderer.getPhysicalDevice();
@@ -32,14 +35,18 @@ namespace RT1 {
 
         initRenderPass();
         initPipeline();
-
-        m_mainCommandPool = m_renderer.getCommandPool(Core::QueueType::Present);
+        initSemaphores();
+        initCommandPools();
 
         vk::Extent2D windowSize = m_renderer.getSwapchainExtents();
         createSwapchainResources(windowSize.width, windowSize.height);
     }
 
     RT1App::~RT1App() noexcept {
+        m_device.destroyCommandPool(m_mainCommandPool);
+        m_device.destroySemaphore(m_copyCompletedSemaphore);
+        m_device.destroySemaphore(m_renderCompletedSemaphore);
+        m_device.destroySemaphore(m_swapchainImageSemaphore);
         destroySwapchainResources();
         m_allocator.destroy();
     }
@@ -121,6 +128,22 @@ namespace RT1 {
         std::vector<std::unique_ptr<Core::GraphicsPipeline>> createdPipelines = m_renderer.createGraphicsPipelines(1, &pipelineCreateInfo);
 
         m_simpleTrianglePipeline = std::move(createdPipelines[0]);
+    }
+
+    void RT1App::initSemaphores() {
+        vk::SemaphoreCreateInfo createInfo{};
+
+        m_swapchainImageSemaphore = m_device.createSemaphore(createInfo);
+        m_renderCompletedSemaphore = m_device.createSemaphore(createInfo);
+        m_copyCompletedSemaphore = m_device.createSemaphore(createInfo);
+    }
+
+    void RT1App::initCommandPools() {
+        vk::CommandPoolCreateInfo createInfo{
+            vk::CommandPoolCreateFlags(),
+            m_graphicsQueue.familyIndex,
+        };
+        m_mainCommandPool = m_device.createCommandPool(createInfo);
     }
 
     void RT1App::createSwapchainResources(int width, int height) {
@@ -282,6 +305,18 @@ namespace RT1 {
         createSwapchainResources(viewport.width, viewport.height);
     }
 
-    void RT1App::renderFrame(Core::TimePoint now, Core::TimeDelta delta) {}
+    void RT1App::renderFrame(Core::TimePoint now, Core::TimeDelta delta) {
+        uint32_t imageIndex = m_renderer.getNextSwapchainImage(m_swapchainImageSemaphore);
+
+        // The main draw pass
+        // TODO
+
+        // Transfer to swapchain image
+        // TODO
+
+        // Present
+        // TODO
+    }
+
     void RT1App::simulateFrame(Core::TimePoint now, Core::TimeDelta delta) {}
 }

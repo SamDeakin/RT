@@ -422,7 +422,6 @@ namespace Core {
     // -- end ctor and helpers --
 
     Renderer::~Renderer() noexcept {
-        cleanupCommandPools();
         cleanupOldSwapchain();
         m_instance.destroySurfaceKHR(m_surface);
         m_device.destroy();
@@ -436,41 +435,16 @@ namespace Core {
     const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
     const std::vector<vk::Image>& Renderer::getSwapchainImages() const { return m_swapchainImages; }
     std::size_t Renderer::getNumSwapchainImages() const { return m_swapchainImages.size(); }
+
+    uint32_t Renderer::getNextSwapchainImage(vk::Semaphore semaphore) {
+        auto [result, value] = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, semaphore, vk::Fence());
+        REND_DEBUG(result);
+        return value;
+    }
+
     const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
 
-    vk::CommandPool Renderer::getCommandPool(QueueType type) {
-        m_createdCommandPoolTypes.insert(type);
-
-        QueueGroup& group = m_queues[type];
-        auto& [nextIndex, poolList] = m_commandPools[type];
-
-        if (nextIndex >= group.queues.size())
-            nextIndex = 0;
-
-        vk::CommandPool returnPool;
-        if (poolList.size() <= nextIndex) {
-            vk::CommandPoolCreateInfo createInfo{
-                vk::CommandPoolCreateFlags(),
-                static_cast<uint32_t>(nextIndex),
-            };
-            returnPool = m_device.createCommandPool(createInfo);
-            poolList.push_back(returnPool);
-        } else {
-            returnPool = poolList[nextIndex];
-        }
-
-        nextIndex++;
-        return returnPool;
-    }
-
-    void Renderer::cleanupCommandPools() {
-        for (QueueType type : m_createdCommandPoolTypes) {
-            auto& [_, poolList] = m_commandPools[type];
-            for (vk::CommandPool pool : poolList) {
-                m_device.destroyCommandPool(pool);
-            }
-        }
-    }
+    const QueueGroup& Renderer::getQueue(QueueType type) { return m_queues[type]; }
 
     void Renderer::recreateSwapChain(vk::Extent2D windowExtents) {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(m_surface);

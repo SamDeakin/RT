@@ -63,17 +63,23 @@ namespace Core {
         std::size_t getNumSwapchainImages() const;
 
         /**
+         * Get the next swapchain image index
+         * @param semaphore: A semaphore that will be signalled when the image is ready
+         * @return The index of the next image
+         */
+        uint32_t getNextSwapchainImage(vk::Semaphore semaphore);
+
+        /**
          * Get the output format used in the swapchain
          * @return The format used to construct the swapchain
          */
         const vk::Format& getOutputFormat() const;
 
         /**
-         * Get a command pool for the given queue type
-         * @param type: The primary queue type requested
-         * @return A valid command pool, not necessarily distinct from one previously returned by this function.
+         * Get a queue with the primary type of the requested type
+         * @return A QueueGroup specifying various information about the returned queue (including its handle)
          */
-        vk::CommandPool getCommandPool(QueueType type);
+        const QueueGroup& getQueue(QueueType type);
 
         /**
          * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.
@@ -107,9 +113,6 @@ namespace Core {
         /// Vulkan logical device configuration
         vk::Device m_device;
         std::unordered_map<QueueType, QueueGroup> m_queues;
-        /// Command pool sets, closely linked to queues
-        std::unordered_map<QueueType, std::pair<std::size_t, std::vector<vk::CommandPool>>> m_commandPools;
-        std::set<QueueType> m_createdCommandPoolTypes;
 
         /// Vulkan surface configuration
         vk::SurfaceKHR m_surface;
@@ -171,9 +174,6 @@ namespace Core {
         void initializeNewSwapchain();
 
         // -- end swapchain creation helpers --
-
-        /// Destroy all previously created command pools
-        void cleanupCommandPools();
     };
 
 }

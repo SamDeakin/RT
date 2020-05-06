@@ -63,13 +63,23 @@ namespace RT1 {
         std::vector<FramebufferData> m_framebufferData;
 
         vk::CommandPool m_mainCommandPool;
+        const Core::QueueGroup& m_graphicsQueue;
+        const Core::QueueGroup& m_transferQueue;
+        const Core::QueueGroup& m_presentQueue;
         std::vector<vk::CommandBuffer> m_commandBuffers;
         std::vector<vk::Fence> m_commandBufferFences; // To signal when it is safe to modify command buffers
+
+        // Semaphores for render signalling
+        vk::Semaphore m_swapchainImageSemaphore;
+        vk::Semaphore m_renderCompletedSemaphore;
+        vk::Semaphore m_copyCompletedSemaphore;
 
         // -- Begin ctor helpers --
 
         void initRenderPass();
         void initPipeline();
+        void initSemaphores();
+        void initCommandPools();
 
         // -- End ctor helpers --
 

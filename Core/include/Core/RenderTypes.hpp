@@ -6,6 +6,11 @@
 #include <chrono>
 #include <vector>
 
+#define REND_DEBUG(result)                                                                                                                                     \
+    if (result != vk::Result::eSuccess) {                                                                                                                      \
+        std::cout << "DEBUG: " << __func__ << ": \"" << vk::to_string(result) << "\"" << std::endl;                                                            \
+    }
+
 namespace Core {
 
     enum class QueueType {

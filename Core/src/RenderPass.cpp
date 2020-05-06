@@ -8,6 +8,6 @@ namespace Core {
     RenderPass::~RenderPass() { m_device.destroyRenderPass(m_handle); }
 
     const vk::RenderPass& RenderPass::getHandle() const { return m_handle; }
-    
+
     RenderPass::operator vk::RenderPass() const { return m_handle; }
 }
