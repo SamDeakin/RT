@@ -8,6 +8,8 @@ namespace Core {
         GraphicsPipeline(vk::Device& device, vk::Pipeline& pipeline);
         ~GraphicsPipeline();
 
+        operator vk::Pipeline() const;
+
     private:
         vk::Device& m_device;
 

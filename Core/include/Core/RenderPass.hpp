@@ -10,6 +10,8 @@ namespace Core {
 
         [[nodiscard]] const vk::RenderPass& getHandle() const;
 
+        operator vk::RenderPass() const;
+
     private:
         vk::Device& m_device;
         vk::RenderPass m_handle;

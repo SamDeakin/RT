@@ -238,7 +238,37 @@ namespace RT1 {
     }
 
     void RT1App::recordCommandBuffers() {
-        // TODO Record command buffers
+        // Info common to each command buffer
+        vk::CommandBufferBeginInfo beginInfo{};
+
+        vk::ClearValue clearValue = {
+            std::array<float, 4>{1.0, 0.0, 0.0, 1.0},
+        };
+        vk::RenderPassBeginInfo renderPassInfo{
+            *m_basicRenderPass,
+            vk::Framebuffer(), // Replaced each iteration
+            vk::Rect2D{
+                vk::Offset2D{0, 0},
+                m_renderer.getSwapchainExtents(),
+            },
+            1,
+            &clearValue,
+        };
+
+        std::size_t numCmdBuffers = m_renderer.getNumSwapchainImages();
+        for (std::size_t cmdBufferIndex = 0; cmdBufferIndex < numCmdBuffers; cmdBufferIndex++) {
+            vk::CommandBuffer& buffer = m_commandBuffers[cmdBufferIndex];
+            buffer.begin(beginInfo);
+
+            FramebufferData& framebufferData = m_framebufferData[cmdBufferIndex];
+            renderPassInfo.framebuffer = framebufferData.framebuffer;
+            buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+            buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_simpleTrianglePipeline);
+            buffer.draw(3, 1, 0, 0);
+            buffer.endRenderPass();
+            buffer.end();
+        }
     }
 
     void RT1App::destroyCommandBuffers() {
