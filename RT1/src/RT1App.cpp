@@ -33,6 +33,8 @@ namespace RT1 {
         initRenderPass();
         initPipeline();
 
+        m_mainCommandPool = m_renderer.getCommandPool(Core::QueueType::Present);
+
         vk::Extent2D windowSize = m_renderer.getSwapchainExtents();
         createSwapchainResources(windowSize.width, windowSize.height);
     }
@@ -142,14 +144,13 @@ namespace RT1 {
             vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment,
             vk::SharingMode::eExclusive,
             0,
-            nullptr,                              // Ignored when sharing mode is not eConcurrent
+            nullptr, // Ignored when sharing mode is not eConcurrent
             vk::ImageLayout::eUndefined,
         };
         vma::AllocationCreateInfo imageAllocationInfo{};
 
-
         for (std::size_t i = 0; i < numSwapchainImages; i++) {
-            auto[image, allocation] = m_allocator.createImage(framebufferImageInfo, imageAllocationInfo);
+            auto [image, allocation] = m_allocator.createImage(framebufferImageInfo, imageAllocationInfo);
 
             vk::ImageViewCreateInfo imageViewCreateInfo{
                 vk::ImageViewCreateFlags(),
@@ -195,6 +196,54 @@ namespace RT1 {
             m_allocator.destroyImage(framebufferData.colourAttachment0Image, framebufferData.colourAttachment0ImageAllocation);
         }
         m_framebufferData.clear();
+    }
+
+    void RT1App::createCommandBuffers() {
+        if (m_commandBufferFences.size() > 0) {
+            // Wait until all our command buffers are not in a pending state
+            // Note we only wait on the first few fences, if there are more fences than buffers
+            m_device.waitForFences(static_cast<uint32_t>(m_commandBuffers.size()), m_commandBufferFences.data(), VK_TRUE, UINT64_MAX);
+        }
+
+        std::size_t neededCommandBuffers = m_renderer.getNumSwapchainImages();
+        if (m_commandBuffers.size() != neededCommandBuffers) {
+            // Resize
+            destroyCommandBuffers();
+            m_commandBuffers.resize(neededCommandBuffers);
+            m_commandBufferFences.resize(neededCommandBuffers);
+
+            vk::CommandBufferAllocateInfo allocInfo{
+                m_mainCommandPool,
+                vk::CommandBufferLevel::ePrimary,
+                static_cast<uint32_t>(neededCommandBuffers),
+            };
+
+            m_device.allocateCommandBuffers(&allocInfo, m_commandBuffers.data());
+
+            vk::FenceCreateInfo fenceCreateInfo{
+                vk::FenceCreateFlagBits::eSignaled,
+            };
+
+            while (m_commandBufferFences.size() < m_commandBuffers.size()) {
+                m_commandBufferFences.push_back(m_device.createFence(fenceCreateInfo));
+            }
+        } else {
+            // Reset for reuse
+            for (vk::CommandBuffer buffer : m_commandBuffers) {
+                buffer.reset(vk::CommandBufferResetFlags());
+            }
+        }
+
+        recordCommandBuffers();
+    }
+
+    void RT1App::recordCommandBuffers() {
+        // TODO Record command buffers
+    }
+
+    void RT1App::destroyCommandBuffers() {
+        m_device.freeCommandBuffers(m_mainCommandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+        m_commandBuffers.clear();
     }
 
     void RT1App::regenerateSwapchainResources(vk::Extent2D viewport) {

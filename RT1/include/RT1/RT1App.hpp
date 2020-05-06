@@ -7,6 +7,8 @@
 
 #include <vk_mem_alloc.hpp>
 
+#include <vector>
+
 namespace RT1 {
 
     class RT1App : public Core::App {
@@ -60,6 +62,10 @@ namespace RT1 {
 
         std::vector<FramebufferData> m_framebufferData;
 
+        vk::CommandPool m_mainCommandPool;
+        std::vector<vk::CommandBuffer> m_commandBuffers;
+        std::vector<vk::Fence> m_commandBufferFences; // To signal when it is safe to modify command buffers
+
         // -- Begin ctor helpers --
 
         void initRenderPass();
@@ -75,6 +81,15 @@ namespace RT1 {
 
         /// Destroy only resources that are specific to each swapchain.
         void destroySwapchainResources();
+
+        /// Create and record command buffers used for drawing
+        void createCommandBuffers();
+
+        /// Record into the current set of command buffers. Expects the command buffers to be ready for recording
+        void recordCommandBuffers();
+
+        /// Delete the current set of command buffers
+        void destroyCommandBuffers();
 
         // -- End swapchain recreation helpers --
     };

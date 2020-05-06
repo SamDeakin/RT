@@ -4,6 +4,7 @@
 #include "Core/RenderTypes.hpp"
 
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.hpp>
@@ -68,6 +69,13 @@ namespace Core {
         const vk::Format& getOutputFormat() const;
 
         /**
+         * Get a command pool for the given queue type
+         * @param type: The primary queue type requested
+         * @return A valid command pool, not necessarily distinct from one previously returned by this function.
+         */
+        vk::CommandPool getCommandPool(QueueType type);
+
+        /**
          * Tells the renderer to destroy any swapchains it has, and then create any new ones needed.
          * Useful for situations where previous swapchains have been invalidated.
          * Must be called before rendering can begin for the first time.
@@ -99,6 +107,9 @@ namespace Core {
         /// Vulkan logical device configuration
         vk::Device m_device;
         std::unordered_map<QueueType, QueueGroup> m_queues;
+        /// Command pool sets, closely linked to queues
+        std::unordered_map<QueueType, std::pair<std::size_t, std::vector<vk::CommandPool>>> m_commandPools;
+        std::set<QueueType> m_createdCommandPoolTypes;
 
         /// Vulkan surface configuration
         vk::SurfaceKHR m_surface;
@@ -160,6 +171,9 @@ namespace Core {
         void initializeNewSwapchain();
 
         // -- end swapchain creation helpers --
+
+        /// Destroy all previously created command pools
+        void cleanupCommandPools();
     };
 
 }
