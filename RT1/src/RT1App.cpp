@@ -304,26 +304,6 @@ namespace RT1 {
         // Info common to each command buffer
         vk::CommandBufferBeginInfo beginInfo{};
 
-        // Info needed to transfer framebuffer image to render layout
-        // The framebuffer ends each frame in transfer src layout, but we don't care about previous frame data
-        // We transfer from an undefined layout because this may be faster (while also possibly harming previous data)
-        vk::ImageMemoryBarrier preRenderPassFramebufferBarrier{
-            vk::AccessFlagBits::eTransferRead,         // The framebuffer will be read for transfer in the previous frame
-            vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
-            m_graphicsQueue.familyIndex,
-            vk::Image(), // Will be replaced later on use
-            vk::ImageSubresourceRange{
-                vk::ImageAspectFlagBits::eColor,
-                0,
-                1,
-                0,
-                1,
-            },
-        };
-
         // Info needed to render
         vk::ClearValue clearValue = {
             std::array<float, 4>{1.0, 0.0, 0.0, 1.0},
@@ -351,24 +331,6 @@ namespace RT1 {
 
         // Offset of vertex data in the vertex buffer
         vk::DeviceSize vertexBufferOffset = 0;
-
-        // Info needed to transfer framebuffer to transfer src layout
-        vk::ImageMemoryBarrier postRenderPassFramebufferBarrier{
-            vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment in the render pass
-            vk::AccessFlagBits::eTransferRead,         // We will read in a blit operation after the barrier
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::ImageLayout::eTransferSrcOptimal,
-            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
-            m_graphicsQueue.familyIndex,
-            vk::Image(), // Will be replaced later on use
-            vk::ImageSubresourceRange{
-                vk::ImageAspectFlagBits::eColor,
-                0,
-                1,
-                0,
-                1,
-            },
-        };
 
         // Info needed to transfer swapchain to transfer dst layout
         vk::ImageMemoryBarrier preTransferSwapchainBarrier{
@@ -438,18 +400,6 @@ namespace RT1 {
             FramebufferData& framebufferData = m_framebufferData[cmdBufferIndex];
             renderPassInfo.framebuffer = framebufferData.framebuffer;
 
-            // Get the framebuffer ready for render
-            preRenderPassFramebufferBarrier.image = framebufferData.colourAttachment0Image;
-            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-                                   vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                                   vk::DependencyFlags(),
-                                   0,
-                                   nullptr,
-                                   0,
-                                   nullptr,
-                                   1,
-                                   &preRenderPassFramebufferBarrier);
-
             // Render
             buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_simpleTrianglePipeline);
@@ -457,18 +407,6 @@ namespace RT1 {
             buffer.bindVertexBuffers(0, 1, &m_vertexBuffer, &vertexBufferOffset);
             buffer.draw(3, 1, 0, 0);
             buffer.endRenderPass();
-
-            // Get the framebuffer ready for transfer
-            postRenderPassFramebufferBarrier.image = framebufferData.colourAttachment0Image;
-            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                                   vk::PipelineStageFlagBits::eTransfer,
-                                   vk::DependencyFlags(),
-                                   0,
-                                   nullptr,
-                                   0,
-                                   nullptr,
-                                   1,
-                                   &postRenderPassFramebufferBarrier);
 
             // Get the swapchain image ready for the transfer
             preTransferSwapchainBarrier.image = swapchainImages[cmdBufferIndex];
