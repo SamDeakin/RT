@@ -364,6 +364,12 @@ namespace Core {
             computeQueueGroup.queues.emplace_back(m_device.getQueue(computeQueueGroup.familyIndex, queueIndex));
         }
         m_queues[QueueType::Compute] = std::move(computeQueueGroup);
+
+        // Also initialize fences here too
+        vk::FenceCreateInfo fenceCreateInfo{
+            vk::FenceCreateFlagBits::eSignaled,
+        };
+        m_renderSyncFence = m_device.createFence(fenceCreateInfo);
     }
 
     bool Renderer::chooseSwapchainSettings() {
@@ -422,6 +428,7 @@ namespace Core {
     // -- end ctor and helpers --
 
     Renderer::~Renderer() noexcept {
+        m_device.destroyFence(m_renderSyncFence);
         cleanupOldSwapchain();
         m_instance.destroySurfaceKHR(m_surface);
         m_device.destroy();
@@ -437,9 +444,14 @@ namespace Core {
     std::size_t Renderer::getNumSwapchainImages() const { return m_swapchainImages.size(); }
 
     uint32_t Renderer::getNextSwapchainImage(vk::Semaphore semaphore) {
-        auto [result, value] = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, semaphore, vk::Fence());
+        auto [result, value] = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, semaphore, m_renderSyncFence);
         REND_DEBUG(result);
         return value;
+    }
+
+    void Renderer::waitForNextRenderFrame() {
+        m_device.waitForFences(1, &m_renderSyncFence, VK_TRUE, UINT64_MAX);
+        m_device.resetFences(1, &m_renderSyncFence);
     }
 
     const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
@@ -501,8 +513,6 @@ namespace Core {
         cleanupOldSwapchain();
         m_swapchain = newSwapchain;
         initializeNewSwapchain();
-
-        // TODO Initialize command buffers
     }
     void Renderer::cleanupOldSwapchain() {
         m_swapchainImages.clear();

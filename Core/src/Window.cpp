@@ -95,6 +95,7 @@ namespace Core {
 
         while (!glfwWindowShouldClose(m_nativeWindow)) {
             glfwPollEvents();
+            m_renderer.waitForNextRenderFrame();
 
             lastFrame = thisFrame;
             thisFrame = std::chrono::high_resolution_clock::now();

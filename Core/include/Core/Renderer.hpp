@@ -70,6 +70,12 @@ namespace Core {
         uint32_t getNextSwapchainImage(vk::Semaphore semaphore);
 
         /**
+         * Wait for the last render job to complete on gpu
+         * Will throw a runtime exception if waiting times out
+         */
+        void waitForNextRenderFrame();
+
+        /**
          * Get the output format used in the swapchain
          * @return The format used to construct the swapchain
          */
@@ -138,6 +144,9 @@ namespace Core {
             vk::Offset3D(0, 0, 0),
             vk::Extent3D(m_swapchainExtents, 1), // This extent member is the only one expected to be modifie
         };
+
+        /// Global synchronization members
+        vk::Fence m_renderSyncFence;
 
         // -- ctor helper functions --
 
