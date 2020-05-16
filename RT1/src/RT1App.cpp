@@ -306,6 +306,16 @@ namespace RT1 {
             &clearValue,
         };
 
+        // Viewport info
+        vk::Viewport viewport{
+            0,
+            0,
+            static_cast<float>(width),
+            static_cast<float>(height),
+            0.0f,
+            1.0f,
+        };
+
         // Info needed to transfer framebuffer to transfer src layout
         vk::ImageMemoryBarrier postRenderPassFramebufferBarrier{
             vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment in the render pass
@@ -383,6 +393,7 @@ namespace RT1 {
             },
         };
 
+        // Actually record every command buffer
         std::size_t numCmdBuffers = m_renderer.getNumSwapchainImages();
         for (std::size_t cmdBufferIndex = 0; cmdBufferIndex < numCmdBuffers; cmdBufferIndex++) {
             vk::CommandBuffer& buffer = m_graphicsCommandBuffers[cmdBufferIndex];
@@ -406,6 +417,7 @@ namespace RT1 {
             // Render
             buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_simpleTrianglePipeline);
+            buffer.setViewport(0, 1, &viewport);
             buffer.draw(3, 1, 0, 0);
             buffer.endRenderPass();
 
