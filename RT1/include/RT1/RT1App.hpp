@@ -59,7 +59,6 @@ namespace RT1 {
 
             vk::Framebuffer framebuffer;
         };
-
         std::vector<FramebufferData> m_framebufferData;
 
         vk::CommandPool m_renderCommandPool;
@@ -75,10 +74,15 @@ namespace RT1 {
         vk::Semaphore m_renderCompletedSemaphore;
         vk::Semaphore m_copyCompletedSemaphore;
 
+        // Renderable data
+        vk::Buffer m_vertexBuffer;
+        vma::Allocation m_vertexBufferAllocation;
+
         // -- Begin ctor helpers --
 
         void initRenderPass();
         void initPipeline();
+        void initRenderData();
         void initSemaphores();
         void initCommandPools();
 

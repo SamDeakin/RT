@@ -35,6 +35,7 @@ namespace RT1 {
 
         initRenderPass();
         initPipeline();
+        initRenderData();
         initSemaphores();
         initCommandPools();
 
@@ -128,6 +129,38 @@ namespace RT1 {
         std::vector<std::unique_ptr<Core::GraphicsPipeline>> createdPipelines = m_renderer.createGraphicsPipelines(1, &pipelineCreateInfo);
 
         m_simpleTrianglePipeline = std::move(createdPipelines[0]);
+    }
+
+    void RT1App::initRenderData() {
+        std::size_t vertexDataSize = sizeof(Vertex) * std::size(screenSpaceTriangle);
+
+        vk::BufferCreateInfo vertexBufferInfo{
+            vk::BufferCreateFlags(),
+            vertexDataSize,
+            vk::BufferUsageFlagBits::eVertexBuffer,
+            vk::SharingMode::eExclusive,
+            1,
+            &m_graphicsQueue.familyIndex,
+        };
+        vma::AllocationCreateInfo vertexAllocationInfo{
+            vma::AllocationCreateFlags(),
+            vma::MemoryUsage::eGpuOnly,
+            // TODO Use device local memory and update with a one-off command buffer
+//            vk::MemoryPropertyFlagBits::eDeviceLocal |
+            vk::MemoryPropertyFlagBits::eHostVisible,
+            vk::MemoryPropertyFlagBits::eHostCoherent,
+            0,
+            vma::Pool(),
+            nullptr,
+        };
+        std::tie(m_vertexBuffer, m_vertexBufferAllocation) = m_allocator.createBuffer(vertexBufferInfo, vertexAllocationInfo);
+
+        // Map this new memory and upload our buffer
+        void* mappedBuffer = m_allocator.mapMemory(m_vertexBufferAllocation);
+        memcpy(mappedBuffer, screenSpaceTriangle, vertexDataSize);
+        m_allocator.flushAllocation(m_vertexBufferAllocation, 0, vertexDataSize);
+        m_allocator.invalidateAllocation(m_vertexBufferAllocation, 0, vertexDataSize);
+        m_allocator.unmapMemory(m_vertexBufferAllocation);
     }
 
     void RT1App::initSemaphores() {
@@ -316,6 +349,9 @@ namespace RT1 {
             1.0f,
         };
 
+        // Offset of vertex data in the vertex buffer
+        vk::DeviceSize vertexBufferOffset = 0;
+
         // Info needed to transfer framebuffer to transfer src layout
         vk::ImageMemoryBarrier postRenderPassFramebufferBarrier{
             vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment in the render pass
@@ -418,6 +454,7 @@ namespace RT1 {
             buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_simpleTrianglePipeline);
             buffer.setViewport(0, 1, &viewport);
+            buffer.bindVertexBuffers(0, 1, &m_vertexBuffer, &vertexBufferOffset);
             buffer.draw(3, 1, 0, 0);
             buffer.endRenderPass();
 
