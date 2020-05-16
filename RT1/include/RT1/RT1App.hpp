@@ -62,11 +62,12 @@ namespace RT1 {
 
         std::vector<FramebufferData> m_framebufferData;
 
-        vk::CommandPool m_mainCommandPool;
+        vk::CommandPool m_renderCommandPool;
+        vk::CommandPool m_transferCommandPool;
         const Core::QueueGroup& m_graphicsQueue;
         const Core::QueueGroup& m_transferQueue;
         const Core::QueueGroup& m_presentQueue;
-        std::vector<vk::CommandBuffer> m_commandBuffers;
+        std::vector<vk::CommandBuffer> m_graphicsCommandBuffers;
         std::vector<vk::Fence> m_commandBufferFences; // To signal when it is safe to modify command buffers
 
         // Semaphores for render signalling
@@ -93,10 +94,10 @@ namespace RT1 {
         void destroySwapchainResources();
 
         /// Create and record command buffers used for drawing
-        void createCommandBuffers();
+        void createCommandBuffers(int width, int height);
 
         /// Record into the current set of command buffers. Expects the command buffers to be ready for recording
-        void recordCommandBuffers();
+        void recordCommandBuffers(int width, int height);
 
         /// Delete the current set of command buffers
         void destroyCommandBuffers();

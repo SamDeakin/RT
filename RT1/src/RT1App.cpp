@@ -43,7 +43,7 @@ namespace RT1 {
     }
 
     RT1App::~RT1App() noexcept {
-        m_device.destroyCommandPool(m_mainCommandPool);
+        m_device.destroyCommandPool(m_renderCommandPool);
         m_device.destroySemaphore(m_copyCompletedSemaphore);
         m_device.destroySemaphore(m_renderCompletedSemaphore);
         m_device.destroySemaphore(m_swapchainImageSemaphore);
@@ -139,11 +139,16 @@ namespace RT1 {
     }
 
     void RT1App::initCommandPools() {
-        vk::CommandPoolCreateInfo createInfo{
+        vk::CommandPoolCreateInfo graphicsPoolInfo{
             vk::CommandPoolCreateFlags(),
             m_graphicsQueue.familyIndex,
         };
-        m_mainCommandPool = m_device.createCommandPool(createInfo);
+        m_renderCommandPool = m_device.createCommandPool(graphicsPoolInfo);
+        vk::CommandPoolCreateInfo transferPoolInfo{
+            vk::CommandPoolCreateFlags(),
+            m_transferQueue.familyIndex,
+        };
+        m_transferCommandPool = m_device.createCommandPool(transferPoolInfo);
     }
 
     void RT1App::createSwapchainResources(int width, int height) {
@@ -210,6 +215,8 @@ namespace RT1 {
                 framebuffer,
             });
         }
+
+        createCommandBuffers(width, height);
     }
 
     void RT1App::destroySwapchainResources() {
@@ -221,49 +228,70 @@ namespace RT1 {
         m_framebufferData.clear();
     }
 
-    void RT1App::createCommandBuffers() {
-        if (m_commandBufferFences.size() > 0) {
+    void RT1App::createCommandBuffers(int width, int height) {
+        if (!m_commandBufferFences.empty()) {
             // Wait until all our command buffers are not in a pending state
             // Note we only wait on the first few fences, if there are more fences than buffers
-            m_device.waitForFences(static_cast<uint32_t>(m_commandBuffers.size()), m_commandBufferFences.data(), VK_TRUE, UINT64_MAX);
+            m_device.waitForFences(static_cast<uint32_t>(m_graphicsCommandBuffers.size()), m_commandBufferFences.data(), VK_TRUE, UINT64_MAX);
         }
 
         std::size_t neededCommandBuffers = m_renderer.getNumSwapchainImages();
-        if (m_commandBuffers.size() != neededCommandBuffers) {
+        if (m_graphicsCommandBuffers.size() != neededCommandBuffers) {
             // Resize
             destroyCommandBuffers();
-            m_commandBuffers.resize(neededCommandBuffers);
+            m_graphicsCommandBuffers.resize(neededCommandBuffers);
             m_commandBufferFences.resize(neededCommandBuffers);
 
             vk::CommandBufferAllocateInfo allocInfo{
-                m_mainCommandPool,
+                m_renderCommandPool,
                 vk::CommandBufferLevel::ePrimary,
                 static_cast<uint32_t>(neededCommandBuffers),
             };
 
-            m_device.allocateCommandBuffers(&allocInfo, m_commandBuffers.data());
+            m_device.allocateCommandBuffers(&allocInfo, m_graphicsCommandBuffers.data());
 
             vk::FenceCreateInfo fenceCreateInfo{
                 vk::FenceCreateFlagBits::eSignaled,
             };
 
-            while (m_commandBufferFences.size() < m_commandBuffers.size()) {
+            while (m_commandBufferFences.size() < m_graphicsCommandBuffers.size()) {
                 m_commandBufferFences.push_back(m_device.createFence(fenceCreateInfo));
             }
         } else {
             // Reset for reuse
-            for (vk::CommandBuffer buffer : m_commandBuffers) {
+            for (vk::CommandBuffer buffer : m_graphicsCommandBuffers) {
                 buffer.reset(vk::CommandBufferResetFlags());
             }
         }
 
-        recordCommandBuffers();
+        recordCommandBuffers(width, height);
     }
 
-    void RT1App::recordCommandBuffers() {
+    void RT1App::recordCommandBuffers(int width, int height) {
         // Info common to each command buffer
         vk::CommandBufferBeginInfo beginInfo{};
 
+        // Info needed to transfer framebuffer image to render layout
+        // The framebuffer ends each frame in transfer src layout, but we don't care about previous frame data
+        // We transfer from an undefined layout because this may be faster (while also possibly harming previous data)
+        vk::ImageMemoryBarrier preRenderPassFramebufferBarrier{
+            vk::AccessFlagBits::eTransferRead,         // The framebuffer will be read for transfer in the previous frame
+            vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eColorAttachmentOptimal,
+            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
+            m_graphicsQueue.familyIndex,
+            vk::Image(), // Will be replaced later on use
+            vk::ImageSubresourceRange{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                1,
+                0,
+                1,
+            },
+        };
+
+        // Info needed to render
         vk::ClearValue clearValue = {
             std::array<float, 4>{1.0, 0.0, 0.0, 1.0},
         };
@@ -272,31 +300,167 @@ namespace RT1 {
             vk::Framebuffer(), // Replaced each iteration
             vk::Rect2D{
                 vk::Offset2D{0, 0},
-                m_renderer.getSwapchainExtents(),
+                vk::Extent2D(width, height),
             },
             1,
             &clearValue,
         };
 
+        // Info needed to transfer framebuffer to transfer src layout
+        vk::ImageMemoryBarrier postRenderPassFramebufferBarrier{
+            vk::AccessFlagBits::eColorAttachmentWrite, // We will write to the image as a color attachment in the render pass
+            vk::AccessFlagBits::eTransferRead,         // We will read in a blit operation after the barrier
+            vk::ImageLayout::eColorAttachmentOptimal,
+            vk::ImageLayout::eTransferSrcOptimal,
+            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
+            m_graphicsQueue.familyIndex,
+            vk::Image(), // Will be replaced later on use
+            vk::ImageSubresourceRange{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                1,
+                0,
+                1,
+            },
+        };
+
+        // Info needed to transfer swapchain to transfer dst layout
+        vk::ImageMemoryBarrier preTransferSwapchainBarrier{
+            vk::AccessFlags(),
+            vk::AccessFlagBits::eTransferWrite, // We will write to the image in a blit
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eTransferDstOptimal,
+            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
+            m_graphicsQueue.familyIndex,
+            vk::Image(), // Will be replaced later on use
+            vk::ImageSubresourceRange{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                1,
+                0,
+                1,
+            },
+        };
+
+        // Info needed for blit operation
+        std::array<vk::Offset3D, 2> swapchainBlitOffsets{
+            vk::Offset3D(0, 0, 0),
+            vk::Offset3D(width, height, 1),
+        };
+        vk::ImageBlit blitToSwapchain{
+            vk::ImageSubresourceLayers{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                0,
+                1,
+            },
+            swapchainBlitOffsets,
+            vk::ImageSubresourceLayers{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                0,
+                1,
+            },
+            swapchainBlitOffsets,
+        };
+        const std::vector<vk::Image>& swapchainImages = m_renderer.getSwapchainImages();
+
+        // Info needed to transfer swapchain image to present layout
+        vk::ImageMemoryBarrier postTransferSwapchainBarrier{
+            vk::AccessFlagBits::eTransferWrite, // We will write to the image in a blit
+            vk::AccessFlags(), // We won't use the image again this frame
+            vk::ImageLayout::eTransferDstOptimal,
+            vk::ImageLayout::ePresentSrcKHR,
+            m_graphicsQueue.familyIndex, // Explicitly maintain the queue family
+            m_graphicsQueue.familyIndex,
+            vk::Image(), // Will be replaced later on use
+            vk::ImageSubresourceRange{
+                vk::ImageAspectFlagBits::eColor,
+                0,
+                1,
+                0,
+                1,
+            },
+        };
+
         std::size_t numCmdBuffers = m_renderer.getNumSwapchainImages();
         for (std::size_t cmdBufferIndex = 0; cmdBufferIndex < numCmdBuffers; cmdBufferIndex++) {
-            vk::CommandBuffer& buffer = m_commandBuffers[cmdBufferIndex];
+            vk::CommandBuffer& buffer = m_graphicsCommandBuffers[cmdBufferIndex];
             buffer.begin(beginInfo);
 
             FramebufferData& framebufferData = m_framebufferData[cmdBufferIndex];
             renderPassInfo.framebuffer = framebufferData.framebuffer;
-            buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
+            // Get the framebuffer ready for render
+            preRenderPassFramebufferBarrier.image = framebufferData.colourAttachment0Image;
+            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                   vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                                   vk::DependencyFlags(),
+                                   0,
+                                   nullptr,
+                                   0,
+                                   nullptr,
+                                   1,
+                                   &preRenderPassFramebufferBarrier);
+
+            // Render
+            buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_simpleTrianglePipeline);
             buffer.draw(3, 1, 0, 0);
             buffer.endRenderPass();
+
+            // Get the framebuffer ready for transfer
+            postRenderPassFramebufferBarrier.image = framebufferData.colourAttachment0Image;
+            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                                   vk::PipelineStageFlagBits::eTransfer,
+                                   vk::DependencyFlags(),
+                                   0,
+                                   nullptr,
+                                   0,
+                                   nullptr,
+                                   1,
+                                   &postRenderPassFramebufferBarrier);
+
+            // Get the swapchain image ready for the transfer
+            preTransferSwapchainBarrier.image = swapchainImages[cmdBufferIndex];
+            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                   vk::PipelineStageFlagBits::eTransfer,
+                                   vk::DependencyFlags(),
+                                   0,
+                                   nullptr,
+                                   0,
+                                   nullptr,
+                                   1,
+                                   &preTransferSwapchainBarrier);
+
+            // Transfer
+            buffer.blitImage(framebufferData.colourAttachment0Image,
+                             vk::ImageLayout::eTransferSrcOptimal,
+                             swapchainImages[cmdBufferIndex],
+                             vk::ImageLayout::eTransferDstOptimal,
+                             1,
+                             &blitToSwapchain,
+                             vk::Filter::eNearest);
+
+            // Get the swapchain image ready for presentation
+            postTransferSwapchainBarrier.image = swapchainImages[cmdBufferIndex];
+            buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                   vk::PipelineStageFlagBits::eBottomOfPipe,
+                                   vk::DependencyFlags(),
+                                   0,
+                                   nullptr,
+                                   0,
+                                   nullptr,
+                                   1,
+                                   &postTransferSwapchainBarrier);
+
             buffer.end();
         }
     }
 
     void RT1App::destroyCommandBuffers() {
-        m_device.freeCommandBuffers(m_mainCommandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
-        m_commandBuffers.clear();
+        m_device.freeCommandBuffers(m_renderCommandPool, static_cast<uint32_t>(m_graphicsCommandBuffers.size()), m_graphicsCommandBuffers.data());
+        m_graphicsCommandBuffers.clear();
     }
 
     void RT1App::regenerateSwapchainResources(vk::Extent2D viewport) {
@@ -308,23 +472,30 @@ namespace RT1 {
     void RT1App::renderFrame(Core::TimePoint now, Core::TimeDelta delta) {
         uint32_t imageIndex = m_renderer.getNextSwapchainImage(m_swapchainImageSemaphore);
 
-        // The main draw pass
-        // TODO
-
-        // Transfer to swapchain image
-        // TODO
+        // The main draw pass (including the image transfer)
+        vk::PipelineStageFlags waitStageFlags = vk::PipelineStageFlagBits::eTransfer; // This stage waits on the semaphore.
+        vk::SubmitInfo drawPassSubmitInfo{
+            1,
+            &m_swapchainImageSemaphore,
+            &waitStageFlags,
+            1,
+            &m_graphicsCommandBuffers[imageIndex],
+            1,
+            &m_copyCompletedSemaphore,
+        };
+        m_graphicsQueue.queues[0].submit(1, &drawPassSubmitInfo, vk::Fence());
 
         // Present
         vk::SwapchainKHR swapchain = m_renderer.getSwapchain();
         vk::PresentInfoKHR presentInfo{
             1,
-            &m_swapchainImageSemaphore,
+            &m_copyCompletedSemaphore,
             1,
             &swapchain,
             &imageIndex,
             nullptr,
         };
-        m_presentQueue.queues[0].presentKHR(presentInfo);
+        m_graphicsQueue.queues[0].presentKHR(presentInfo); // TODO We assume graphics can present
     }
 
     void RT1App::simulateFrame(Core::TimePoint now, Core::TimeDelta delta) {}
