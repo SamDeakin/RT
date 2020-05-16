@@ -57,6 +57,12 @@ namespace Core {
         const std::vector<vk::Image>& getSwapchainImages() const;
 
         /**
+         * Get the current swapchain object, as may be needed for presentation
+         * @return The current swapchain object
+         */
+        vk::SwapchainKHR getSwapchain() const; // TODO Change this to have the renderer take an image and present directly
+
+        /**
          * Get the number of swapchain images currently known to exist.
          * @return In practice, the size of getSwapchainImages()
          */

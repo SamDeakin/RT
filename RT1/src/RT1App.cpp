@@ -315,7 +315,16 @@ namespace RT1 {
         // TODO
 
         // Present
-        // TODO
+        vk::SwapchainKHR swapchain = m_renderer.getSwapchain();
+        vk::PresentInfoKHR presentInfo{
+            1,
+            &m_swapchainImageSemaphore,
+            1,
+            &swapchain,
+            &imageIndex,
+            nullptr,
+        };
+        m_presentQueue.queues[0].presentKHR(presentInfo);
     }
 
     void RT1App::simulateFrame(Core::TimePoint now, Core::TimeDelta delta) {}

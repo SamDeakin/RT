@@ -441,6 +441,7 @@ namespace Core {
 
     const vk::Extent2D& Renderer::getSwapchainExtents() const { return m_swapchainExtents; }
     const std::vector<vk::Image>& Renderer::getSwapchainImages() const { return m_swapchainImages; }
+    vk::SwapchainKHR Renderer::getSwapchain() const { return m_swapchain; }
     std::size_t Renderer::getNumSwapchainImages() const { return m_swapchainImages.size(); }
 
     uint32_t Renderer::getNextSwapchainImage(vk::Semaphore semaphore) {
