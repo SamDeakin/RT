@@ -88,6 +88,15 @@ namespace RT1 {
 
         // -- End ctor helpers --
 
+        // -- Begin dtor helpers --
+
+        // Destroy swapchain resources before calling any of these
+        void cleanupCommandPools();
+        void cleanupSemaphores();
+        void cleanupRenderData();
+
+        // -- End dtor helpers --
+
         // -- Helpers for swapchain recreation --
 
         /// Create resources that are specific to each swapchain.

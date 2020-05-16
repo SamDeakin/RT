@@ -44,11 +44,12 @@ namespace RT1 {
     }
 
     RT1App::~RT1App() noexcept {
-        m_device.destroyCommandPool(m_renderCommandPool);
-        m_device.destroySemaphore(m_copyCompletedSemaphore);
-        m_device.destroySemaphore(m_renderCompletedSemaphore);
-        m_device.destroySemaphore(m_swapchainImageSemaphore);
         destroySwapchainResources();
+
+        cleanupCommandPools();
+        cleanupSemaphores();
+        cleanupRenderData();
+
         m_allocator.destroy();
     }
 
@@ -163,12 +164,22 @@ namespace RT1 {
         m_allocator.unmapMemory(m_vertexBufferAllocation);
     }
 
+    void RT1App::cleanupRenderData() {
+        m_allocator.destroyBuffer(m_vertexBuffer, m_vertexBufferAllocation);
+    }
+
     void RT1App::initSemaphores() {
         vk::SemaphoreCreateInfo createInfo{};
 
         m_swapchainImageSemaphore = m_device.createSemaphore(createInfo);
         m_renderCompletedSemaphore = m_device.createSemaphore(createInfo);
         m_copyCompletedSemaphore = m_device.createSemaphore(createInfo);
+    }
+
+    void RT1App::cleanupSemaphores() {
+        m_device.destroySemaphore(m_copyCompletedSemaphore);
+        m_device.destroySemaphore(m_renderCompletedSemaphore);
+        m_device.destroySemaphore(m_swapchainImageSemaphore);
     }
 
     void RT1App::initCommandPools() {
@@ -182,6 +193,10 @@ namespace RT1 {
             m_transferQueue.familyIndex,
         };
         m_transferCommandPool = m_device.createCommandPool(transferPoolInfo);
+    }
+
+    void RT1App::cleanupCommandPools() {
+        m_device.destroyCommandPool(m_renderCommandPool);
     }
 
     void RT1App::createSwapchainResources(int width, int height) {
