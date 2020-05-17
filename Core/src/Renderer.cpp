@@ -445,7 +445,7 @@ namespace Core {
     std::size_t Renderer::getNumSwapchainImages() const { return m_swapchainImages.size(); }
 
     uint32_t Renderer::getNextSwapchainImage(vk::Semaphore semaphore) {
-        auto [result, value] = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, semaphore, m_renderSyncFence);
+        auto [result, value] = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, semaphore, vk::Fence());
         REND_DEBUG(result);
         return value;
     }
@@ -454,6 +454,8 @@ namespace Core {
         m_device.waitForFences(1, &m_renderSyncFence, VK_TRUE, UINT64_MAX);
         m_device.resetFences(1, &m_renderSyncFence);
     }
+
+    vk::Fence Renderer::getFrameEndFence() const { return m_renderSyncFence; }
 
     const vk::Format& Renderer::getOutputFormat() const { return m_surfaceFormat.format; }
 

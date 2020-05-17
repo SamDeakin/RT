@@ -485,7 +485,7 @@ namespace RT1 {
             1,
             &m_copyCompletedSemaphore,
         };
-        m_graphicsQueue.queues[0].submit(1, &drawPassSubmitInfo, vk::Fence());
+        m_graphicsQueue.queues[0].submit(1, &drawPassSubmitInfo, m_renderer.getFrameEndFence());
 
         // Present
         vk::SwapchainKHR swapchain = m_renderer.getSwapchain();

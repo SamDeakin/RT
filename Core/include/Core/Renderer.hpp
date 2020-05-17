@@ -82,6 +82,13 @@ namespace Core {
         void waitForNextRenderFrame();
 
         /**
+         * Get a fence that signals the end of the current render frame.
+         * This fence is signalled externally to the renderer.
+         * @return A fence that may be waited on or signalled by the caller.
+         */
+        vk::Fence getFrameEndFence() const;
+
+        /**
          * Get the output format used in the swapchain
          * @return The format used to construct the swapchain
          */
