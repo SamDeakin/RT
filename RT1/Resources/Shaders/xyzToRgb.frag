@@ -1,7 +1,9 @@
 #version 450
 
+layout(location = 0) in vec3 position;
+
 layout(location = 0) out vec4 colour;
 
 void main() {
-    colour = vec4(abs(gl_FragCoord.xyz), 1.0);
+    colour = vec4(abs(position), 1.0);
 }

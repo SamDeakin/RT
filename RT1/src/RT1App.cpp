@@ -321,7 +321,7 @@ namespace RT1 {
 
         // Info needed to render
         vk::ClearValue clearValue = {
-            std::array<float, 4>{1.0, 0.0, 0.0, 1.0},
+            std::array<float, 4>{1.0, 0.0, 1.0, 1.0},
         };
         vk::RenderPassBeginInfo renderPassInfo{
             *m_basicRenderPass,
