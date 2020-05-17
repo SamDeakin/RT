@@ -18,8 +18,8 @@ namespace {
 
 namespace RT1 {
 
-    RT1App::RT1App(Core::Renderer& renderer, Core::App::Parameters& parameters)
-        : Core::App(renderer, parameters)
+    RT1App::RT1App(Core::Renderer& renderer, Core::V1AppBase::Parameters& parameters)
+        : Core::V1AppBase(renderer, parameters)
         , m_runtimeParameters(parameters)
         , m_renderer(renderer)
         , m_device(renderer.getDevice())

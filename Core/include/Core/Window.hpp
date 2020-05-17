@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Core/App.hpp>
 #include <Core/RenderTypes.hpp>
 #include <Core/Renderer.hpp>
+#include <Core/V1AppBase.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -21,7 +21,7 @@ namespace Core {
          * Set the application that will be run and receive events
          * @param app: The implementation of Core::App
          */
-        void setApp(App* app);
+        void setApp(V1AppBase* app);
 
         /**
          * Get the size of the viewport currently
@@ -50,6 +50,6 @@ namespace Core {
 
         bool m_minimized;
 
-        std::unique_ptr<App> m_mainApp;
+        std::unique_ptr<V1AppBase> m_mainApp;
     };
 }

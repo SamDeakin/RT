@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Core/App.hpp>
 #include <Core/DescriptorSetLayout.hpp>
 #include <Core/PipelineLayout.hpp>
 #include <Core/RenderPass.hpp>
+#include <Core/V1AppBase.hpp>
 
 #include <vk_mem_alloc.hpp>
 
@@ -11,12 +11,12 @@
 
 namespace RT1 {
 
-    class RT1App : public Core::App {
+    class RT1App : public Core::V1AppBase {
     public:
         /**
          * @param renderer: The renderer to use for graphics
          */
-        explicit RT1App(Core::Renderer& renderer, Core::App::Parameters& parameters);
+        explicit RT1App(Core::Renderer& renderer, Core::V1AppBase::Parameters& parameters);
         ~RT1App() noexcept final;
 
     protected:
@@ -41,7 +41,7 @@ namespace RT1 {
         void regenerateSwapchainResources(vk::Extent2D viewport) final;
 
     private:
-        Core::App::Parameters& m_runtimeParameters;
+        Core::V1AppBase::Parameters& m_runtimeParameters;
         Core::Renderer& m_renderer;
         vk::Device m_device;
         vma::Allocator m_allocator;

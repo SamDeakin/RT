@@ -41,7 +41,7 @@ main() {
     // No features required
     vk::PhysicalDeviceFeatures features{};
 
-    Core::App::Parameters parameters{
+    Core::V1AppBase::Parameters parameters{
         .width = 1920,
         .height = 1080,
     };

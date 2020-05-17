@@ -5,7 +5,7 @@
 #include <Core/Renderer.hpp>
 
 namespace Core {
-    class App : public InputReceiver {
+    class V1AppBase : public InputReceiver {
     public:
         /// A basic set of parameters used to run the app
         struct Parameters {
@@ -13,8 +13,8 @@ namespace Core {
             int height;
         };
 
-        explicit App(Renderer& renderer, Parameters& parameters);
-        ~App() override = default;
+        explicit V1AppBase(Renderer& renderer, Parameters& parameters);
+        ~V1AppBase() override = default;
 
         /**
          * Begin rendering the next frame

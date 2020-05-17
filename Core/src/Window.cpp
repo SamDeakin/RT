@@ -70,7 +70,7 @@ namespace Core {
         });
     }
 
-    void Window::setApp(App* app) { m_mainApp.reset(app); }
+    void Window::setApp(V1AppBase* app) { m_mainApp.reset(app); }
 
     bool Window::windowResized(int width, int height) {
         if (width == 0 && height == 0) {
