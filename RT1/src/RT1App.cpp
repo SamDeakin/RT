@@ -197,6 +197,7 @@ namespace RT1 {
 
     void RT1App::cleanupCommandPools() {
         m_device.destroyCommandPool(m_renderCommandPool);
+        m_device.destroyCommandPool(m_transferCommandPool);
     }
 
     void RT1App::createSwapchainResources(int width, int height) {
