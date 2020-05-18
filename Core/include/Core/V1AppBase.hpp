@@ -14,6 +14,7 @@ namespace Core {
         };
 
         explicit V1AppBase(Renderer& renderer, Parameters& parameters);
+        V1AppBase(V1AppBase& other) = delete;
         ~V1AppBase() override = default;
 
         /**

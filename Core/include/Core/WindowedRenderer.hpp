@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Renderer.hpp"
-#include "Core/Window.hpp"
+#include "Core/V1WindowBase.hpp"
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
@@ -125,7 +125,7 @@ namespace Core {
 
     template<class W, class A, class P>
     void WindowedRenderer<W, A, P>::initApp(P& runtimeParameters) {
-        A* app = new A(*this, runtimeParameters);
+        std::shared_ptr<A> app = std::make_shared<A>(*this, runtimeParameters);
         m_window->setApp(app);
     }
 

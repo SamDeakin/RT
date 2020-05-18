@@ -1,8 +1,8 @@
-#include "Core/Window.hpp"
+#include "Core/V1WindowBase.hpp"
 #include <iostream>
 namespace Core {
 
-    Window::Window(Renderer& renderer, int width, int height)
+    V1WindowBase::V1WindowBase(Renderer& renderer, int width, int height)
         : m_renderer(renderer)
         , m_minimized(false) {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -12,11 +12,11 @@ namespace Core {
         registerCallbacks();
     }
 
-    Window::~Window() noexcept { glfwDestroyWindow(m_nativeWindow); }
+    V1WindowBase::~V1WindowBase() noexcept { glfwDestroyWindow(m_nativeWindow); }
 
-    GLFWwindow* Window::getNativeWindow() { return m_nativeWindow; }
+    GLFWwindow* V1WindowBase::getNativeWindow() { return m_nativeWindow; }
 
-    vk::Extent2D Window::getViewportExtents() {
+    vk::Extent2D V1WindowBase::getViewportExtents() {
         int width, height;
         glfwGetWindowSize(m_nativeWindow, &width, &height);
 
@@ -26,7 +26,7 @@ namespace Core {
         };
     }
 
-    void Window::fixTopBar(int requestedWidth, int requestedHeight) {
+    void V1WindowBase::fixTopBar(int requestedWidth, int requestedHeight) {
         // We poll events throughout this function to remove spurious window resize events that may appear later
         int width, height;
         glfwGetWindowSize(m_nativeWindow, &width, &height);
@@ -60,19 +60,19 @@ namespace Core {
         glfwPollEvents();
     }
 
-    void Window::registerCallbacks() {
+    void V1WindowBase::registerCallbacks() {
         // In order to re-find this class after, we use the glfw user-pointer feature
         glfwSetWindowUserPointer(m_nativeWindow, this);
 
         glfwSetFramebufferSizeCallback(m_nativeWindow, [](GLFWwindow* window, int width, int height) {
-            Window* userptr = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+            V1WindowBase* userptr = reinterpret_cast<V1WindowBase*>(glfwGetWindowUserPointer(window));
             userptr->windowResized(width, height);
         });
     }
 
-    void Window::setApp(V1AppBase* app) { m_mainApp.reset(app); }
+    void V1WindowBase::setApp(const std::shared_ptr<V1AppBase>& app) { m_mainApp = app; }
 
-    bool Window::windowResized(int width, int height) {
+    bool V1WindowBase::windowResized(int width, int height) {
         if (width == 0 && height == 0) {
             m_minimized = true;
         } else {
@@ -89,7 +89,7 @@ namespace Core {
         return true;
     }
 
-    void Window::run() {
+    void V1WindowBase::run() {
         TimePoint thisFrame = std::chrono::high_resolution_clock::now();
         TimePoint lastFrame;
 

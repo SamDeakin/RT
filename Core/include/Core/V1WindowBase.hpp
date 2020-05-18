@@ -10,18 +10,22 @@
 
 namespace Core {
 
-    class Window : protected InputReceiver {
+    class V1WindowBase : protected InputReceiver {
     public:
-        explicit Window(Renderer& renderer, int width, int height);
-        ~Window() noexcept override;
+        explicit V1WindowBase(Renderer& renderer, int width, int height);
+        ~V1WindowBase() noexcept override;
 
+        /**
+         * Get the native GLFW window intended for rendering use with vulkan.
+         * @return A pointer to the window.
+         */
         GLFWwindow* getNativeWindow();
 
         /**
          * Set the application that will be run and receive events
          * @param app: The implementation of Core::App
          */
-        void setApp(V1AppBase* app);
+        void setApp(const std::shared_ptr<V1AppBase>& app);
 
         /**
          * Get the size of the viewport currently
@@ -37,9 +41,11 @@ namespace Core {
         /// Event handling overrides, only visible to subclasses
         bool windowResized(int width, int height) override;
 
+    protected:
+        Renderer& m_renderer;
+
     private:
         GLFWwindow* m_nativeWindow;
-        Renderer& m_renderer;
 
         /// A helper for the ctor: corrects the window height to be the requested height.
         /// Useful for cases where the native height differs slightly due to the top bar or other.
@@ -50,6 +56,6 @@ namespace Core {
 
         bool m_minimized;
 
-        std::unique_ptr<V1AppBase> m_mainApp;
+        std::shared_ptr<V1AppBase> m_mainApp;
     };
 }

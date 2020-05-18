@@ -1,7 +1,7 @@
 
 #include "RT1/RT1App.hpp"
 
-#include <Core/Window.hpp>
+#include <Core/V1WindowBase.hpp>
 #include <Core/WindowedRenderer.hpp>
 
 #include <GLFW/glfw3.h>
@@ -45,7 +45,7 @@ main() {
         .height = 1080,
     };
 
-    Core::WindowedRenderer<Core::Window, RT1::RT1App> renderer(glfwExtensionCount,
+    Core::WindowedRenderer<Core::V1WindowBase, RT1::RT1App> renderer(glfwExtensionCount,
                                                                glfwExtensions,
                                                                std::size(DESIRED_INSTANCE_EXTENSIONS),
                                                                DESIRED_INSTANCE_EXTENSIONS,
