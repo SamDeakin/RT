@@ -11,13 +11,19 @@
 
 namespace RT1 {
 
-    class RT1App : public Core::V1AppBase {
+    class RT1App final : public Core::V1AppBase {
     public:
         /**
          * @param renderer: The renderer to use for graphics
          */
         explicit RT1App(Core::Renderer& renderer, Core::V1AppBase::Parameters& parameters);
         ~RT1App() noexcept final;
+
+        /// Disallowed operations
+        RT1App(RT1App& other) = delete;
+        RT1App(RT1App&& other) = delete;
+        RT1App& operator=(RT1App& other) = delete;
+        RT1App& operator=(RT1App&& other) = delete;
 
     protected:
         /**
@@ -52,7 +58,7 @@ namespace RT1 {
         std::unique_ptr<Core::GraphicsPipeline> m_simpleTrianglePipeline;
 
         /// Members recreated on swapchain recreation
-        struct FramebufferData{
+        struct FramebufferData {
             vk::Image colourAttachment0Image;
             vma::Allocation colourAttachment0ImageAllocation;
             vk::ImageView colourAttachment0ImageView;
