@@ -5,7 +5,6 @@
 #include <Core/WindowedRenderer.hpp>
 
 #include <GLFW/glfw3.h>
-#include <glm/vec4.hpp>
 #include <vulkan/vulkan.hpp>
 
 #include <iostream>
@@ -48,14 +47,12 @@ main() {
 
     Core::WindowedRenderer<Core::Window, RT1::RT1App> renderer(glfwExtensionCount,
                                                                glfwExtensions,
-                                                               sizeof(DESIRED_INSTANCE_EXTENSIONS) / sizeof(decltype(*DESIRED_INSTANCE_EXTENSIONS)),
+                                                               std::size(DESIRED_INSTANCE_EXTENSIONS),
                                                                DESIRED_INSTANCE_EXTENSIONS,
-                                                               sizeof(DESIRED_INSTANCE_LAYERS) / sizeof(decltype(*DESIRED_INSTANCE_LAYERS)),
+                                                               std::size(DESIRED_INSTANCE_LAYERS),
                                                                DESIRED_INSTANCE_LAYERS,
-                                                               sizeof(DESIRED_DEVICE_EXTENSIONS) / sizeof(decltype(*DESIRED_DEVICE_EXTENSIONS)),
+                                                               std::size(DESIRED_DEVICE_EXTENSIONS),
                                                                DESIRED_DEVICE_EXTENSIONS,
                                                                features,
                                                                parameters);
-
-    renderer.run();
 }

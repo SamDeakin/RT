@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <memory>
+#include <thread>
 
 namespace Core {
 
@@ -52,6 +53,9 @@ namespace Core {
         /// Window and display configuration
         std::unique_ptr<W> m_window;
 
+        /// The thread that will setup and begin rendering. Has the same lifetime as this object.
+        std::thread m_mainThread;
+
         /// Initialize m_window
         void initWindow(int width, int height);
 
@@ -83,10 +87,18 @@ namespace Core {
         initLogicalDevice();
         initSwapchain();
         initApp(runtimeParameters);
+
+        // At this point the WindowedRenderer has been completely setup for rendering.
+        // This call must be last as this thread may begin at any point from now on, and the starting
+        // thread can no longer access members without synchronization.
+        m_mainThread = std::thread(&WindowedRenderer::run, this);
     }
 
     template<class W, class A, class P>
-    WindowedRenderer<W, A, P>::~WindowedRenderer() {}
+    WindowedRenderer<W, A, P>::~WindowedRenderer() {
+        // Must happen first in dtor, to wait for the thread to join before the rest is destroyed.
+        m_mainThread.join();
+    }
 
     template<class W, class A, class P>
     void WindowedRenderer<W, A, P>::initWindow(int width, int height) {
